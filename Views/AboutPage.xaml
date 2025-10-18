@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CHROMA.Views.AboutPage"
+			 Title="About">
+
+	<ScrollView>
+		<VerticalStackLayout Padding="16" Spacing="8">
+			<Label Text="About This App [STATIC INFO]" FontAttributes="Bold" FontSize="18"/>
+			<Label Text="A learning tool for exploring classical color theory harmonies, with rule‑based critique and simple visualizations."/>
+			<Label Text="Version 0.1 (capstone MVP)"/>
+			<Label Text="Acknowledgements: color theory references; WCAG contrast guidelines."/>
+			<Button Text="Replay Intro" />
+		</VerticalStackLayout>
+	</ScrollView>
+</ContentPage>

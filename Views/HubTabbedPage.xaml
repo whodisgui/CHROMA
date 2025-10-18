@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TabbedPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    x:Class="CHROMA.Views.HubTabbedPage"
+    xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+    xmlns:ui="clr-namespace:CHROMA.Views"
+    android:TabbedPage.ToolbarPlacement="Bottom"
+    android:TabbedPage.IsSwipePagingEnabled="false">
+
+	<TabbedPage.Children>
+		<NavigationPage
+		    IconImageSource="tabbedpage_icons/create_tabbedpage_icon.png"
+		    Title="Create">
+			<x:Arguments>
+				<ui:CreatePage />
+			</x:Arguments>
+		</NavigationPage>
+		
+		<NavigationPage
+			IconImageSource="tabbedpage_icons/critique_tabbedpage_icon.png"
+			Title="Critique">
+			<x:Arguments>
+				<ui:CritiquePage />
+			</x:Arguments>
+		</NavigationPage>
+
+		<NavigationPage
+			IconImageSource="tabbedpage_icons/aboutinfo_tabbedpage_icon.png"
+			Title="About">
+			<x:Arguments>
+				<ui:AboutPage/>
+			</x:Arguments>
+		</NavigationPage>
+
+	</TabbedPage.Children>
+</TabbedPage>

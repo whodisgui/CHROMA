@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="CHROMA.Views.CritiquePage"
+			 Title="Critique">
+	
+	<!-- INCLUDE THIS BETWEEN CLASS AND TITLE
+	         x:DataType="vm:CritiqueViewModel"
+             xmlns:vm="clr-namespace:CHROMA.ViewModels"	
+	-->
+
+	<ScrollView>
+		<VerticalStackLayout Padding="16" Spacing="16">
+
+			<!-- Section 1: Palette Input -->
+			<Border Padding="12">
+				<VerticalStackLayout Spacing="8">
+					<Label Text="Palette Input" FontAttributes="Bold"/>
+					<Editor Placeholder="#E96841, #41C2E9, #..." AutoSize="TextChanges" Text="{Binding PaletteText}" />
+					<HorizontalStackLayout>
+						<Button Text="Import .txt" Command="{Binding ImportCommand}"/>
+						<Button Text="Run Critique" Command="{Binding RunCritiqueCommand}"/>
+					</HorizontalStackLayout>
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 2: Feedback -->
+			<Border Padding="12">
+				<VerticalStackLayout Spacing="4">
+					<Label Text="Feedback" FontAttributes="Bold"/>
+					<Label Text="{Binding Report.Summary}" />
+					<Label Text="Harmony Spacing" FontAttributes="Bold" />
+					<Label Text="{Binding Report.HarmonySpacing}" />
+					<Label Text="Contrast (WCAG)" FontAttributes="Bold" />
+					<Label Text="{Binding Report.Contrast}" />
+					<Label Text="Similarity (ΔE)" FontAttributes="Bold" />
+					<Label Text="{Binding Report.DeltaE}" />
+					<Label Text="Balance (60/30/10)" FontAttributes="Bold" />
+					<Label Text="{Binding Report.Balance}" />
+					<Label Text="Disclaimer: This critique reflects theoretical harmony rules only." FontSize="12" TextColor="Gray"/>
+					<HorizontalStackLayout>
+						<Button Text="Save" Command="{Binding SaveCommand}"/>
+						<Button Text="Export" Command="{Binding ExportCommand}"/>
+					</HorizontalStackLayout>
+				</VerticalStackLayout>
+			</Border>
+
+		</VerticalStackLayout>
+	</ScrollView>
+</ContentPage>
