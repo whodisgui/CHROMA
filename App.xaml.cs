@@ -5,6 +5,9 @@
         public App()
         {
             InitializeComponent();
+
+			// Sets constant light theme - optimal for colors/graphics
+			UserAppTheme = AppTheme.Light;
         }
 
 		protected override Window CreateWindow(IActivationState? activationState)
