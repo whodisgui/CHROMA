@@ -1,65 +1,176 @@
-using System.Collections.ObjectModel;
-using System.Windows.Input;
+using CHROMA.Services;
+using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
+using System;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Intrinsics.Arm;
+using System.Text.Json;
+using System.Windows.Input;
 
 namespace CHROMA.ViewModels;
 
 public class CreateViewModel : BaseViewModel
 {
-    public string BaseHex { get => _baseHex; set { SetProperty(ref _baseHex, value); UpdateBase(); } }
-    string _baseHex = "#E96841";
+	// ==== INPUT HERE ==========================================
+
+	string _baseHex = "#E96841"; //Sample Starter Color Code
+	Color _baseColor = Colors.Orange;
+	string _statusMessage = string.Empty;
+
+    public string BaseHex
+    {
+        get => _baseHex;
+        set
+        {
+			if (SetProperty(ref _baseHex, value, nameof(BaseHex)))
+            {
+				OnPropertyChanged(nameof(BaseHexPreview));
+				UpdateBaseFromHex();
+			}
+		}
+    }
+
     public string BaseHexPreview => $"Current: {BaseHex}";
-    public Color BaseColor { get => _baseColor; set => SetProperty(ref _baseColor, value); }
-    Color _baseColor = Colors.Orange;
-
-    public ObservableCollection<string> Schemes { get; } = new(new []{ "Complementary","Analogous","Triadic","Split-Complementary","Tetradic","Monochromatic"});
-    public string SelectedScheme { get => _selectedScheme; set { SetProperty(ref _selectedScheme, value); Generate(); } }
-    string _selectedScheme = "Complementary";
-
-    public ObservableCollection<PaletteVM> GeneratedPalettes { get; } = new();
-    public PaletteVM? ActivePalette { get => _active; set => SetProperty(ref _active, value); }
-    PaletteVM? _active;
-
-    public DistributionVM Dist { get; } = new(){ MainPct="6*", SecondaryPct="3*", AccentPct="1*"};
-
-    public ICommand ClearCommand => new Command(()=> BaseHex = "");
-    public ICommand UsePaletteCommand => new Command<PaletteVM>(p => ActivePalette = p);
-    public ICommand SaveCommand => new Command(() => {});
-    public ICommand ExportJsonCommand => new Command(() => {});
-
-    void UpdateBase()
+    
+    public Color BaseColor
     {
-        try { BaseColor = Color.FromArgb(BaseHex); }
-        catch { /* ignore */ }
-        Generate();
+        get => _baseColor;
+        private set => SetProperty(ref _baseColor, value, nameof(BaseColor));
     }
 
-    void Generate()
+	public string StatusMessage
     {
-        GeneratedPalettes.Clear();
-        // Stub: generate a simple 3-color palette using shifts; replace with real service later
-        var baseC = BaseColor;
-        var p = new PaletteVM("Sample " + SelectedScheme, new []{ baseC, Colors.SkyBlue, Colors.Coral });
-        GeneratedPalettes.Add(p);
+        get => _statusMessage;
+        private set => SetProperty(ref _statusMessage, value, nameof(StatusMessage));
     }
-}
 
-public class PaletteVM : ObservableObject
-{
-    public string Name { get; }
-    public List<Color> Colors { get; }
-    public double Saturation { get => _s; set => SetProperty(ref _s, value); }
-    public double Lightness { get => _l; set => SetProperty(ref _l, value); }
-    double _s = 1.0, _l = 0.5;
-    public PaletteVM(string name, IEnumerable<Color> colors) { Name = name; Colors = colors.ToList(); }
-}
 
-public class DistributionVM : ObservableObject
-{
-    public string MainPct { get => _m; set => SetProperty(ref _m, value); }
-    public string SecondaryPct { get => _s; set => SetProperty(ref _s, value); }
-    public string AccentPct { get => _a; set => SetProperty(ref _a, value); }
-    string _m="6*", _s="3*", _a="1*";
+	// ==== SCHEME SELECTION ====================================
+
+	public ObservableCollection<string> Schemes { get; } =
+        new(new[]{
+			"Monochromatic",
+            "Complementary",
+			"Split-Complementary",
+            "Analogous",
+            "Triadic",
+            "Tetradic",
+        });
+
+	string _selectedScheme = "Monochromatic"; //Sample Starter Chosen Scheme
+
+    public string SelectedScheme
+    {
+		get => _selectedScheme;
+        set
+        {
+			if (SetProperty(ref _selectedScheme, value, nameof(SelectedScheme)))
+            {
+                GeneratePalette();
+            }
+		}
+	}
+
+
+	// ==== GENERATED PALETTE + EXPORT ==========================
+
+	public ObservableCollection<ColorSlotViewModel> Palette { get; } = new();
+
+	string _exportJson = string.Empty;
+    public string ExportJson
+    {
+        get => _exportJson;
+        private set => SetProperty(ref _exportJson, value, nameof(ExportJson));
+    }
+
+    // Simple 60/30/10 suggestion based on palette size (FR3/FR4 hook). :contentReference[oaicite:9]{index=9}
+    public double PrimaryRatio => 0.6;
+    public double SecondaryRatio => 0.3;
+    public double AccentRatio => 0.1;
+
+
+	// ==== COMMANDS ============================================
+
+	public ICommand GenerateCommand => new Command(GeneratePalette);
+	public ICommand SaveCommand => new Command(Save);
+	public ICommand ExportJsonCommand => new Command(ExportPaletteJson);
+
+
+	// ==== CORE LOGIC ==========================================
+
+    void UpdateBaseFromHex()
+    {
+		if (!ColorMathService.TryParseHex(BaseHex, out var color))
+        {
+            StatusMessage = "Invalid HEX Color. Expected format = #RRGGBB.";
+            return;
+        }
+
+        StatusMessage = string.Empty;
+        BaseColor = color;
+		GeneratePalette();
+	}
+
+    void GeneratePalette()
+    {
+        if (!ColorMathService.TryParseHex(BaseHex, out var color))
+        {
+			// If hex is bad, just keep current palette and show message.
+			StatusMessage = "Cannot generate palette – invalid base HEX.";
+            return;
+		}
+
+        var baseHSL = ColorMathService.ToHSL(color);
+
+        var scheme = SelectedScheme switch
+        {
+            "Monochromatic"       => HarmonyScheme.Monochromatic,
+            "Complementary"       => HarmonyScheme.Complementary,
+			"Split-Complementary" => HarmonyScheme.SplitComplementary,
+            "Analogous"           => HarmonyScheme.Analogous,
+            "Triadic"             => HarmonyScheme.Triadic,
+            "Tetradic"            => HarmonyScheme.Tetradic,
+			_                     => HarmonyScheme.Monochromatic
+		};
+
+		var generated = HarmonyGenerator.Generate(baseHSL, scheme);
+
+		Palette.Clear();
+
+        for (int i = 0; i < generated.Length; i++)
+        {
+            string label = generated.Length == 2 && i == 1
+                ? "Complement"
+                : $"Color {i + 1}";
+
+            Palette.Add(new ColorSlotViewModel(label, generated[i]));
+		}
+
+        StatusMessage = $"Generated {Palette.Count} colors using {SelectedScheme}.";
+		ExportJson = string.Empty; // reset previous export
+	}
+
+    void Save()
+    {
+        // Hook point for persistence layer later. For now, just acknowledge the action.
+        StatusMessage = "Palette saved (stub - wire to JSON file save/load later).";
+	}
+
+    void ExportPaletteJson()
+    {
+		var hexList = Palette
+			.Select(p => ColorMathService.ToHex(p.Color))
+            .ToArray();
+
+        ExportJson = JsonSerializer.Serialize(hexList, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+		StatusMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
+	}
 }
 
 // Minimal base classes
@@ -67,11 +178,18 @@ public class BaseViewModel : ObservableObject { }
 public class ObservableObject : System.ComponentModel.INotifyPropertyChanged
 {
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;
-    protected bool SetProperty<T>(ref T storage, T value, string? propName=null)
-    {
-        if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
-        storage = value;
-        PropertyChanged?.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(propName ?? string.Empty));
-        return true;
+	protected bool SetProperty<T>(ref T storage, T value, string? propertyName = null)
+	{
+		if (EqualityComparer<T>.Default.Equals(storage, value)) return false;
+		storage = value;
+		OnPropertyChanged(propertyName);
+		return true;
     }
+
+	protected void OnPropertyChanged(string? propertyName)
+    {
+		PropertyChanged?.Invoke(
+            this,
+			new System.ComponentModel.PropertyChangedEventArgs(propertyName ?? string.Empty));
+	}
 }

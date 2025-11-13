@@ -139,7 +139,7 @@ public static class ColorMathService
 		else if (hPrime < 5) { (r1, g1, b1) = (x, 0, c); }
 		else { (r1, g1, b1) = (c, 0, x); }
 
-		double m = 1 - c / 2.0;
+		double m = l - c / 2.0;
 		double r = r1 + m;
 		double g = g1 + m;
 		double b = b1 + m;

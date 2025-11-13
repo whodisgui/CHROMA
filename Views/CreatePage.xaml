@@ -1,60 +1,51 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="CHROMA.Views.CreatePage"
+             xmlns:vm="clr-namespace:CHROMA.ViewModels"
 			 x:DataType="vm:CreateViewModel"
-			 xmlns:vm="clr-namespace:CHROMA.ViewModels"
+			 x:Class="CHROMA.Views.CreatePage"
 			 Title="Create">
 
 	<ScrollView>
 		<VerticalStackLayout Padding="16" Spacing="16">
 
 			<!-- Section 1: Color Input -->
-			<Border Padding="12">
+			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
-					<Label Text="Base Color" FontAttributes="Bold"/>
-					<HorizontalStackLayout Spacing="8">
-						<Entry Text="{Binding BaseHex}" Placeholder="#E96841" Keyboard="Chat"/>
-						<Button Text="Clear" Command="{Binding ClearCommand}" />
-					</HorizontalStackLayout>
-					<Label Text="{Binding BaseHexPreview}" FontSize="12" TextColor="Gray"/>
-					<!-- simple live swatch -->
-					<BoxView HeightRequest="24" CornerRadius="6" Color="{Binding BaseColor}" />
+					<Label Text="Base Color" FontAttributes="Bold" />
+					<Entry Text="{Binding BaseHex}" Placeholder="#RRGGBB" />
+					<Label Text="{Binding BaseHexPreview}" FontSize="12" />
+					<BoxView HeightRequest="40" Color="{Binding BaseColor}" />
+					<Label Text="{Binding StatusMessage}" FontSize="11" TextColor="DarkRed" />
 				</VerticalStackLayout>
 			</Border>
 
-			<!-- Section 2: Harmony Results -->
-			<Border Padding="12">
+			<!-- Section 2: Harmony Selection & Swatch Results -->
+			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
-					<Label Text="Harmony Results" FontAttributes="Bold"/>
-					<Picker Title="Scheme" ItemsSource="{Binding Schemes}" SelectedItem="{Binding SelectedScheme}" />
+					<Label Text="Harmony Scheme" FontAttributes="Bold"/>
+					<Picker ItemsSource="{Binding Schemes}"
+							SelectedItem="{Binding SelectedScheme}" />
+
+					<Button Text="Generate" Command="{Binding GenerateCommand}" />
+
 					<!-- Cards list -->
-					<CollectionView ItemsSource="{Binding GeneratedPalettes}" SelectionMode="Single">
+					<CollectionView ItemsSource="{Binding Palette}"
+									Margin="0,12,0,0">
 						<CollectionView.ItemTemplate>
-							<DataTemplate>
-								<Border Padding="8" Margin="0,4">
-									<VerticalStackLayout Spacing="6">
-										<Label Text="{Binding Name}" FontAttributes="Bold"/>
-										<HorizontalStackLayout Spacing="4">
-											<BoxView WidthRequest="28" HeightRequest="20" CornerRadius="4" Color="{Binding Colors[0]}"/>
-											<BoxView WidthRequest="28" HeightRequest="20" CornerRadius="4" Color="{Binding Colors[1]}"/>
-											<BoxView WidthRequest="28" HeightRequest="20" CornerRadius="4" Color="{Binding Colors[2]}"/>
-											<BoxView WidthRequest="28" HeightRequest="20" CornerRadius="4" Color="{Binding Colors[3]}"/>
-										</HorizontalStackLayout>
-										<!-- S/L sliders, Hue locked -->
-										<Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-											<VerticalStackLayout Grid.Column="0">
-												<Label Text="Saturation"/>
-												<Slider Minimum="0" Maximum="1" Value="{Binding Saturation, Mode=TwoWay}"/>
-											</VerticalStackLayout>
-											<VerticalStackLayout Grid.Column="1">
-												<Label Text="Lightness/Value"/>
-												<Slider Minimum="0" Maximum="1" Value="{Binding Lightness, Mode=TwoWay}"/>
-											</VerticalStackLayout>
-										</Grid>
-										<Button Text="Use this palette" Command="{Binding BindingContext.UsePaletteCommand, Source={x:Reference Name=PageRoot}}" CommandParameter="{Binding .}"/>
-									</VerticalStackLayout>
-								</Border>
+							<DataTemplate x:DataType="vm:ColorSlotViewModel">
+								<Grid ColumnDefinitions="60,*,Auto"
+									  RowDefinitions="Auto,Auto">
+									<BoxView Grid.RowSpan="2"
+											 Grid.Column="0"
+											 Margin="0,0,8,0"
+											 Color="{Binding Color}" />
+									<Label Grid.Column="1"
+										   Text="{Binding Label}" />
+									<Label Grid.Column="1" Grid.Row="1"
+										   FontSize="11"
+										   Text="{Binding Color, Converter={StaticResource ColorToHexConverter}}" />
+								</Grid>
 							</DataTemplate>
 						</CollectionView.ItemTemplate>
 					</CollectionView>
@@ -62,32 +53,39 @@
 			</Border>
 
 			<!-- Section 3: Visualization -->
-			<Border Padding="12">
+			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
-					<Label Text="Visualization" FontAttributes="Bold"/>
-					<HorizontalStackLayout Spacing="4">
-						<BoxView WidthRequest="36" HeightRequest="24" CornerRadius="6" Color="{Binding ActivePalette.Colors[0]}"/>
-						<BoxView WidthRequest="36" HeightRequest="24" CornerRadius="6" Color="{Binding ActivePalette.Colors[1]}"/>
-						<BoxView WidthRequest="36" HeightRequest="24" CornerRadius="6" Color="{Binding ActivePalette.Colors[2]}"/>
-						<BoxView WidthRequest="36" HeightRequest="24" CornerRadius="6" Color="{Binding ActivePalette.Colors[3]}"/>
-					</HorizontalStackLayout>
-					<Grid HeightRequest="18">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="{Binding Dist.MainPct}" />
-							<ColumnDefinition Width="{Binding Dist.SecondaryPct}" />
-							<ColumnDefinition Width="{Binding Dist.AccentPct}" />
-						</Grid.ColumnDefinitions>
-						<BoxView Grid.Column="0" Color="{Binding ActivePalette.Colors[0]}" />
-						<BoxView Grid.Column="1" Color="{Binding ActivePalette.Colors[1]}" />
-						<BoxView Grid.Column="2" Color="{Binding ActivePalette.Colors[2]}" />
-					</Grid>
-					<HorizontalStackLayout>
-						<Button Text="Save" Command="{Binding SaveCommand}" />
-						<Button Text="Export JSON" Command="{Binding ExportJsonCommand}" />
-					</HorizontalStackLayout>
+					<Label Text="Fine-tune Saturation / Lightness"
+                       FontAttributes="Bold" />
+					<CollectionView ItemsSource="{Binding Palette}">
+						<CollectionView.ItemTemplate>
+							<DataTemplate x:DataType="vm:ColorSlotViewModel">
+								<VerticalStackLayout Spacing="4">
+									<Label Text="{Binding Label}" />
+									<BoxView HeightRequest="24" Color="{Binding Color}" />
+									<Label Text="Saturation" FontSize="11" />
+									<Slider Minimum="0" Maximum="1"
+                                        Value="{Binding Saturation}" />
+									<Label Text="Lightness" FontSize="11" />
+									<Slider Minimum="0" Maximum="1"
+                                        Value="{Binding Lightness}" />
+								</VerticalStackLayout>
+							</DataTemplate>
+						</CollectionView.ItemTemplate>
+					</CollectionView>
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 4: Simple export block -->
+			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+				<VerticalStackLayout Spacing="8">
+					<Button Text="Export JSON" Command="{Binding ExportJsonCommand}" />
+					<Editor Text="{Binding ExportJson}"
+                        AutoSize="TextChanges"
+                        IsReadOnly="True"
+                        HeightRequest="120" />
 				</VerticalStackLayout>
 			</Border>
 
 		</VerticalStackLayout>
 	</ScrollView>
-</ContentPage>
