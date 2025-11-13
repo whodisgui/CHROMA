@@ -7,6 +7,7 @@
             InitializeComponent();
 
 			// Sets constant light theme - optimal for colors/graphics
+			// If line is deleted, the default is system setting
 			UserAppTheme = AppTheme.Light;
         }
 
