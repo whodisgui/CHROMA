@@ -154,8 +154,8 @@ public class CreateViewModel : BaseViewModel
 
     void Save()
     {
-        // Hook point for persistence layer later. For now, just acknowledge the action.
-        StatusMessage = "Palette saved (stub - wire to JSON file save/load later).";
+		// Hook point for JSON file save later. For now, just acknowledge the action.
+		StatusMessage = "Palette saved (stub - wire to JSON file save/load next).";
 	}
 
     void ExportPaletteJson()
