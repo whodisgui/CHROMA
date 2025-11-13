@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Microsoft.Maui.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Maui.Graphics;
 
 namespace CHROMA.Services;
 
@@ -49,6 +49,32 @@ public readonly struct HSLColor
 		return $"H:{H:0},{S:0.00},{L:0.00}";
 	}
 }
+
+
+/* ===SUMMARY===
+* Simple HSV Color Struct for Internal Math
+* Hue (H) in [0, 360),
+* Saturation (S) and Value (V) in [0,1].
+*/
+public readonly struct HSVColor
+{
+	public double H { get; }  // H = Hue Value
+	public double S { get; }  // S = Saturation Value
+	public double V { get; }  // V = Value Value
+
+	public HSVColor(double h, double s, double v)
+	{
+		H = HSLColor.NormalizeHue(h);
+		S = HSLColor.Clamp01(s);
+		V = HSLColor.Clamp01(v);
+	}
+
+	public override string ToString()
+	{
+		return $"H:{H:0},{S:0.00},{V:0.00}";
+	}
+}
+
 
 public static class ColorMathService
 {
@@ -101,16 +127,22 @@ public static class ColorMathService
 		double h;
 		double s;
 
-		if (c == 0) {  h = 0; }
-		else if (max == r) { h = 60.0 * (((g - b) / c) % 6.0); }
-		else if (max == g) { h = 60.0 * (((b - r) / c) + 2.0); }
-		else /*if (max == b)*/ { h = 60.0 * (((r - g) / c) + 4.0); }
-
-		if (h < 0) { h += 360.0; }
-
-		if (c == 0) {  s = 0; }
+		if (c == 0)
+		{
+			h = 0;
+			s = 0;
+		}
 		else
 		{
+			if (max == r)
+				h = 60.0 * (((g - b) / c) % 6.0);
+			else if (max == g)
+				h = 60.0 * (((b - r) / c) + 2.0);
+			else // max == b
+				h = 60.0 * (((r - g) / c) + 4.0);
+
+			if (h < 0) h += 360.0;
+
 			s = c / (1 - Math.Abs(2 * l - 1));
 		}
 
@@ -132,12 +164,12 @@ public static class ColorMathService
         double x = c * (1 - Math.Abs(hPrime % 2 - 1));
 
 		double r1, g1, b1;
-		if (hPrime < 1) { (r1, g1, b1) = (c, x, 0); }
+		if (hPrime < 1)      { (r1, g1, b1) = (c, x, 0); }
 		else if (hPrime < 2) { (r1, g1, b1) = (x, c, 0); }
 		else if (hPrime < 3) { (r1, g1, b1) = (0, c, x); }
 		else if (hPrime < 4) { (r1, g1, b1) = (0, x, c); }
 		else if (hPrime < 5) { (r1, g1, b1) = (x, 0, c); }
-		else { (r1, g1, b1) = (c, 0, x); }
+		else                 { (r1, g1, b1) = (c, 0, x); }
 
 		double m = l - c / 2.0;
 		double r = r1 + m;
@@ -145,6 +177,102 @@ public static class ColorMathService
 		double b = b1 + m;
 
 		return new Color((float)r, (float)g, (float)b);
+	}
+
+	/* ===SUMMARY===
+    * Converts RGB Color to HSV.
+    */
+	public static HSVColor ToHSV(Color color)
+	{
+		double r = color.Red;
+		double g = color.Green;
+		double b = color.Blue;
+
+		double max = Math.Max(r, Math.Max(g, b));
+		double min = Math.Min(r, Math.Min(g, b));
+		double c = max - min;
+
+		double h;
+		double s;
+		double v = max;
+
+		if (c == 0) { h = 0; s = 0; }
+		else
+		{
+			if (max == r)
+				h = 60.0 * (((g - b) / c) % 6.0);
+			else if (max == g)
+				h = 60.0 * (((b - r) / c) + 2.0);
+			else // max == b
+				h = 60.0 * (((r - g) / c) + 4.0);
+			if (h < 0) h += 360.0;
+
+			s = c / v;
+		}
+
+		return new HSVColor(h, s, v);
+	}
+
+	/* ===SUMMARY===
+     * Converts HSV to RGB Color.
+     */
+	public static Color FromHSV(HSVColor hsv)
+	{
+		double h = HSLColor.NormalizeHue(hsv.H);
+		double s = HSLColor.Clamp01(hsv.S);
+		double v = HSLColor.Clamp01(hsv.V);
+
+		double c = v * s;
+		double hPrime = h / 60.0;
+		double x = c * (1 - Math.Abs(hPrime % 2 - 1));
+
+		double r1, g1, b1;
+		if (hPrime < 1) { (r1, g1, b1) = (c, x, 0); }
+		else if (hPrime < 2) { (r1, g1, b1) = (x, c, 0); }
+		else if (hPrime < 3) { (r1, g1, b1) = (0, c, x); }
+		else if (hPrime < 4) { (r1, g1, b1) = (0, x, c); }
+		else if (hPrime < 5) { (r1, g1, b1) = (x, 0, c); }
+		else                 { (r1, g1, b1) = (c, 0, x); }
+
+		double m = v - c;
+		double r = r1 + m;
+		double g = g1 + m;
+		double b = b1 + m;
+
+		return new Color((float)r, (float)g, (float)b);
+	}
+
+	/* ===SUMMARY===
+     * Converts HSL to HSV with same hue.
+     */
+	public static HSVColor HSLToHSV(HSLColor hsl)
+	{
+		double l = hsl.L;
+		double s_l = hsl.S;
+
+		double v = l + s_l * Math.Min(l, 1 - l);
+		double s_v = v == 0 ? 0 : 2 * (1 - l / v);
+
+		return new HSVColor(hsl.H, s_v, v);
+	}
+
+	/* ===SUMMARY===
+     * Converts HSV to HSL with same hue.
+     */
+	public static HSLColor HSVToHSL(HSVColor hsv)
+	{
+		double v = hsv.V;
+		double s_v = hsv.S;
+
+		double l = v * (1 - s_v / 2);
+		double s_l;
+
+		if (l == 0 || l == 1)
+			s_l = 0;
+		else
+			s_l = (v - l) / Math.Min(l, 1 - l);
+
+		return new HSLColor(hsv.H, s_l, l);
 	}
 }
 
@@ -163,7 +291,7 @@ public enum HarmonyScheme
 }
 
 /* ===SUMMARY===
-* Generates Complementing colors based on each Color Harmony Scheme
+* Generates complementing colors based on each Color Harmony Scheme
 */
 public static class HarmonyGenerator
 {
