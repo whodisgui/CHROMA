@@ -9,14 +9,62 @@
 	<ScrollView>
 		<VerticalStackLayout Padding="16" Spacing="16">
 
-			<!-- Section 1: Color Input -->
+			<!-- Section 1: Color Input + Input Mode (HEX or HSV) -->
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
 					<Label Text="Base Color" FontAttributes="Bold" />
-					<Entry Text="{Binding BaseHex}" Placeholder="#RRGGBB" />
-					<Label Text="{Binding BaseHexPreview}" FontSize="12" />
+					
+					<!-- Input mode picker -->
+					<HorizontalStackLayout Spacing="8">
+						<Label Text="Mode:" VerticalOptions="Center" />
+						<Picker ItemsSource="{Binding InputModes}"
+								SelectedItem="{Binding SelectedInputMode}"
+								WidthRequest="120" />
+					</HorizontalStackLayout>
+					
+					<!-- HEX input block-->
+					<VerticalStackLayout Spacing="4"
+										 IsVisible="{Binding IsHexMode}">
+						<Label Text="HEX" />
+						<Entry Text="{Binding BaseHex}" Placeholder="#RRGGBB" />
+						<Label Text="{Binding BaseHexPreview}"
+						       FontSize="12"
+						       TextColor="Gray" />
+					</VerticalStackLayout>
+					
+					<!-- HSV input block-->
+					<VerticalStackLayout Spacing="4"
+										 IsVisible="{Binding IsHSVMode}">
+						<Label Text="HSV input" />
+						<Grid ColumnDefinitions="*,*,*"
+							  ColumnSpacing="8">
+							<VerticalStackLayout Grid.Column="0">
+								<Label Text="Hue (0–360°)" FontSize="11" />
+								<Entry Text="{Binding HSV_Hue}"
+									   Keyboard="Numeric"
+									   Placeholder="30" />
+							</VerticalStackLayout>
+							<VerticalStackLayout Grid.Column="1">
+								<Label Text="Sat (0–100%)" FontSize="11" />
+								<Entry Text="{Binding HSV_Saturation}"
+									   Keyboard="Numeric"
+									   Placeholder="70" />
+							</VerticalStackLayout>
+							<VerticalStackLayout Grid.Column="2">
+								<Label Text="Val (0–100%)" FontSize="11" />
+								<Entry Text="{Binding HSV_Value}"
+									   Keyboard="Numeric"
+									   Placeholder="90" />
+							</VerticalStackLayout>
+						</Grid>
+					</VerticalStackLayout>
+
+					<!-- Base color preview + status -->
+					<Label Text="Base Color Preview" FontAttributes="Bold" Margin="0,8,0,0" />
 					<BoxView HeightRequest="40" Color="{Binding BaseColor}" />
-					<Label Text="{Binding StatusMessage}" FontSize="11" TextColor="DarkRed" />
+					<Label Text="{Binding StatusMessage}"
+						   FontSize="11"
+						   TextColor="DarkRed" />
 				</VerticalStackLayout>
 			</Border>
 
@@ -24,51 +72,61 @@
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
 					<Label Text="Harmony Scheme" FontAttributes="Bold"/>
+					
 					<Picker ItemsSource="{Binding Schemes}"
 							SelectedItem="{Binding SelectedScheme}" />
 
-					<Button Text="Generate" Command="{Binding GenerateCommand}" />
+					<Button Text="Generate Palette"
+							Command="{Binding GenerateCommand}"
+							Margin="0,8,0,0" />
 
-					<!-- Cards list -->
+					<!-- Swatch Display (Border + Grid Combo) -->
 					<CollectionView ItemsSource="{Binding Palette}"
 									Margin="0,12,0,0">
 						<CollectionView.ItemTemplate>
 							<DataTemplate x:DataType="vm:ColorSlotViewModel">
-								<Grid ColumnDefinitions="60,*,Auto"
-									  RowDefinitions="Auto,Auto">
-									<BoxView Grid.RowSpan="2"
-											 Grid.Column="0"
-											 Margin="0,0,8,0"
-											 Color="{Binding Color}" />
-									<Label Grid.Column="1"
-										   Text="{Binding Label}" />
-									<Label Grid.Column="1" Grid.Row="1"
-										   FontSize="11"
-										   Text="{Binding Color, Converter={StaticResource ColorToHexConverter}}" />
-								</Grid>
+								<Border Stroke="Lightgray"
+										StrokeThickness="1"
+										Padding="6"
+										Margin="0,0,0,6">
+									<Grid ColumnDefinitions="60,*"
+										  ColumnSpacing="8">
+										<BoxView Grid.Column="0"
+												 HeightRequest="40"
+												 VerticalOptions="Center"
+												 Color="{Binding Color}" />
+										<VerticalStackLayout Grid.Column="1"
+															 Spacing="2">
+											<Label Text="{Binding Label}" />
+											<Label FontSize="11"
+												   Text="{Binding Lightness, StringFormat='L: {0:F2}'}" />
+										</VerticalStackLayout>
+									</Grid>
+								</Border>
 							</DataTemplate>
 						</CollectionView.ItemTemplate>
 					</CollectionView>
 				</VerticalStackLayout>
 			</Border>
 
-			<!-- Section 3: Visualization -->
+			<!-- Section 3: Adjustable S & L for each Swatch (Hue is Locked in VM) -->
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
-					<Label Text="Fine-tune Saturation / Lightness"
-                       FontAttributes="Bold" />
+					<Label Text="Fine-tune Saturation + Lightness"
+						   FontAttributes="Bold" />
+
 					<CollectionView ItemsSource="{Binding Palette}">
 						<CollectionView.ItemTemplate>
 							<DataTemplate x:DataType="vm:ColorSlotViewModel">
-								<VerticalStackLayout Spacing="4">
+								<VerticalStackLayout Spacing="4" Margin="0,0,0,8">
 									<Label Text="{Binding Label}" />
 									<BoxView HeightRequest="24" Color="{Binding Color}" />
 									<Label Text="Saturation" FontSize="11" />
 									<Slider Minimum="0" Maximum="1"
-                                        Value="{Binding Saturation}" />
+											Value="{Binding Saturation}" />
 									<Label Text="Lightness" FontSize="11" />
 									<Slider Minimum="0" Maximum="1"
-                                        Value="{Binding Lightness}" />
+											Value="{Binding Lightness}" />
 								</VerticalStackLayout>
 							</DataTemplate>
 						</CollectionView.ItemTemplate>
@@ -76,14 +134,28 @@
 				</VerticalStackLayout>
 			</Border>
 
-			<!-- Section 4: Simple export block -->
+			<!-- Section 4: Visualization [placeholder for now] -->
+			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+				<VerticalStackLayout Spacing="4">
+					<Label Text="Visualization [preview]"
+						   FontAttributes="Bold" />
+					<BoxView HeightRequest="80"
+							 Color="LightGray"
+							 Opacity="0.3" />
+					<Label Text="[MVP visualization of palette distribution will appear here.]"
+						   FontSize="11"
+						   TextColor="Gray" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 5: Simple export block [placeholder for now] -->
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
 					<Button Text="Export JSON" Command="{Binding ExportJsonCommand}" />
 					<Editor Text="{Binding ExportJson}"
-                        AutoSize="TextChanges"
-                        IsReadOnly="True"
-                        HeightRequest="120" />
+                            AutoSize="TextChanges"
+                            IsReadOnly="True"
+                            HeightRequest="120" />
 				</VerticalStackLayout>
 			</Border>
 

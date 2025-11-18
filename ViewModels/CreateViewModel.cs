@@ -25,9 +25,9 @@ public class CreateViewModel : BaseViewModel
         set
         {
 			if (SetProperty(ref _baseHex, value, nameof(BaseHex)))
-            {
+			{
 				OnPropertyChanged(nameof(BaseHexPreview));
-				UpdateBaseFromHex();
+                if (IsHexMode) { UpdateBaseFromHex(); }
 			}
 		}
     }
@@ -45,6 +45,55 @@ public class CreateViewModel : BaseViewModel
         get => _statusMessage;
         private set => SetProperty(ref _statusMessage, value, nameof(StatusMessage));
     }
+
+
+	// ==== INPUT HERE (Hex or HSV) =============================
+	
+    public ObservableCollection<string> InputModes { get; } = new(new[] { "HEX", "HSV" });
+
+    string _selectedInputMode = "HEX";
+    public string SelectedInputMode
+    {
+        get => _selectedInputMode;
+        set
+        {
+            if (SetProperty(ref _selectedInputMode, value, nameof(SelectedInputMode)))
+            {
+				// Notify XAML visibility bindings
+				OnPropertyChanged(nameof(IsHexMode));
+				OnPropertyChanged(nameof(IsHSVMode));
+			}
+        }
+    }
+
+    // Convenience bools for XAML visibility
+    public bool IsHexMode => SelectedInputMode == "HEX";
+    public bool IsHSVMode => SelectedInputMode == "HSV";
+
+
+    // ==== HSV INPUT (when SelectedInputMode == "HSV") =========
+
+    double _hsvHue;
+    double _hsvSaturation = 100; // user-facing % 0-100
+    double _hsvValue = 100;      // user-facing % 0-100
+
+    public double HSV_Hue
+    {
+        get => _hsvHue;
+        set => SetProperty(ref _hsvHue, value, nameof(HSV_Hue));
+    }
+
+	public double HSV_Saturation
+	{
+		get => _hsvSaturation;
+		set => SetProperty(ref _hsvSaturation, value, nameof(HSV_Saturation));
+	}
+
+	public double HSV_Value
+	{
+		get => _hsvValue;
+		set => SetProperty(ref _hsvValue, value, nameof(HSV_Value));
+	}
 
 
 	// ==== SCHEME SELECTION ====================================
@@ -113,14 +162,42 @@ public class CreateViewModel : BaseViewModel
 		GeneratePalette();
 	}
 
+    void UpdateBaseFromHSV()
+    {
+        var hsv = new HSVColor(
+            HSV_Hue,
+            HSV_Saturation / 100.0,
+            HSV_Value / 100.0);
+        // Interpret Saturation / Value as percentages 0-100
+
+        var color = ColorMathService.FromHSV(hsv);
+
+        StatusMessage = string.Empty;
+        BaseColor = color;
+        GeneratePalette();
+    }
+
     void GeneratePalette()
     {
-        if (!ColorMathService.TryParseHex(BaseHex, out var color))
+        Color color;
+
+        if (IsHexMode)
         {
-			// If hex is bad, just keep current palette and show message.
-			StatusMessage = "Cannot generate palette – invalid base HEX.";
-            return;
-		}
+            if (!ColorMathService.TryParseHex(BaseHex, out color))
+            {
+                StatusMessage = "Cannot generate palette - invalid base HEX.";
+                return;
+            }
+        }
+        else // HSV mode
+        {
+            var hsv = new HSVColor(
+                HSV_Hue,
+                HSV_Saturation / 100.0,
+				HSV_Value / 100.0);
+
+            color = ColorMathService.FromHSV(hsv);
+        }
 
         var baseHSL = ColorMathService.ToHSL(color);
 
