@@ -15,9 +15,10 @@ public class CreateViewModel : BaseViewModel
 {
 	// ==== INPUT HERE ==========================================
 
-	string _baseHex = "#E96841"; //Sample Starter Color Code
-	Color _baseColor = Colors.Orange;
-	string _statusMessage = string.Empty;
+	string _baseHex = string.Empty;
+	Color _baseColor = Colors.Transparent;
+    string _inputMessage = string.Empty;
+    string _paletteMessage = string.Empty;
 
     public string BaseHex
     {
@@ -27,7 +28,6 @@ public class CreateViewModel : BaseViewModel
 			if (SetProperty(ref _baseHex, value, nameof(BaseHex)))
 			{
 				OnPropertyChanged(nameof(BaseHexPreview));
-                if (IsHexMode) { UpdateBaseFromHex(); }
 			}
 		}
     }
@@ -40,10 +40,16 @@ public class CreateViewModel : BaseViewModel
         private set => SetProperty(ref _baseColor, value, nameof(BaseColor));
     }
 
-	public string StatusMessage
+    public string InputMessage
     {
-        get => _statusMessage;
-        private set => SetProperty(ref _statusMessage, value, nameof(StatusMessage));
+        get => _inputMessage;
+        private set => SetProperty(ref _inputMessage, value, nameof(InputMessage));
+    }
+
+    public string PaletteMessage
+    {
+        get => _paletteMessage;
+        private set => SetProperty(ref _paletteMessage, value, nameof(PaletteMessage));
     }
 
 
@@ -62,11 +68,14 @@ public class CreateViewModel : BaseViewModel
 				// Notify XAML visibility bindings
 				OnPropertyChanged(nameof(IsHexMode));
 				OnPropertyChanged(nameof(IsHSVMode));
+
+                ResetInputs();
 			}
         }
     }
 
     // Convenience bools for XAML visibility
+    public bool _hasValidBaseColor = false;
     public bool IsHexMode => SelectedInputMode == "HEX";
     public bool IsHSVMode => SelectedInputMode == "HSV";
 
@@ -145,6 +154,8 @@ public class CreateViewModel : BaseViewModel
 	public ICommand GenerateCommand => new Command(GeneratePalette);
 	public ICommand SaveCommand => new Command(Save);
 	public ICommand ExportJsonCommand => new Command(ExportPaletteJson);
+    public ICommand ApplyInputCommand => new Command(ApplyInput);
+    public ICommand ResetCommand => new Command(ResetInputs);
 
 
 	// ==== CORE LOGIC ==========================================
@@ -153,11 +164,11 @@ public class CreateViewModel : BaseViewModel
     {
 		if (!ColorMathService.TryParseHex(BaseHex, out var color))
         {
-            StatusMessage = "Invalid HEX Color. Expected format = #RRGGBB.";
+            InputMessage = "Invalid HEX Color. Expected format = '#RRGGBB'; values = 0-9 and A-F.";
             return;
         }
 
-        StatusMessage = string.Empty;
+        InputMessage = string.Empty;
         BaseColor = color;
 		GeneratePalette();
 	}
@@ -172,20 +183,27 @@ public class CreateViewModel : BaseViewModel
 
         var color = ColorMathService.FromHSV(hsv);
 
-        StatusMessage = string.Empty;
+        InputMessage = string.Empty;
         BaseColor = color;
         GeneratePalette();
     }
 
     void GeneratePalette()
     {
-        Color color;
+        if (!_hasValidBaseColor)
+        {
+            PaletteMessage = "Please enter and apply a valid base color first.";
+            return;
+        }
+
+        var color = BaseColor;
+        var baseHSL = ColorMathService.ToHSL(color);
 
         if (IsHexMode)
         {
             if (!ColorMathService.TryParseHex(BaseHex, out color))
             {
-                StatusMessage = "Cannot generate palette - invalid base HEX.";
+                PaletteMessage = "Cannot generate palette - invalid base HEX.";
                 return;
             }
         }
@@ -198,8 +216,6 @@ public class CreateViewModel : BaseViewModel
 
             color = ColorMathService.FromHSV(hsv);
         }
-
-        var baseHSL = ColorMathService.ToHSL(color);
 
         var scheme = SelectedScheme switch
         {
@@ -225,14 +241,14 @@ public class CreateViewModel : BaseViewModel
             Palette.Add(new ColorSlotViewModel(label, generated[i]));
 		}
 
-        StatusMessage = $"Generated {Palette.Count} colors using {SelectedScheme}.";
-		ExportJson = string.Empty; // reset previous export
+        PaletteMessage = $"Generated {Palette.Count} colors using {SelectedScheme}.";
+		ExportJson = string.Empty;
 	}
 
     void Save()
     {
 		// Hook point for JSON file save later. For now, just acknowledge the action.
-		StatusMessage = "Palette saved (stub - wire to JSON file save/load next).";
+		InputMessage = "Palette saved (stub - wire to JSON file save/load next).";
 	}
 
     void ExportPaletteJson()
@@ -246,7 +262,53 @@ public class CreateViewModel : BaseViewModel
             WriteIndented = true
         });
 
-		StatusMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
+		PaletteMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
+	}
+
+    void ApplyInput()
+    {
+        // Treat "Enter" as: validate/apply current input and regenerate.
+        if (IsHexMode)
+        {
+            if (!ColorMathService.TryParseHex(BaseHex, out var color))
+            {
+                InputMessage = "Invalid HEX Color. Expected format = '#RRGGBB'; values = 0-9 and A-F.";
+                _hasValidBaseColor = false;
+                return;
+            }
+
+            BaseColor = color;
+            _hasValidBaseColor = true;
+            InputMessage = "Base color set from HEX.";
+        }
+        else  // HSV mode
+        {
+            var hsv = new HSVColor(
+                HSV_Hue,
+                HSV_Saturation / 100.0,
+                HSV_Value / 100.0);
+
+            // Range checks (e.g. 0-360, 0-100)
+            BaseColor = ColorMathService.FromHSV(hsv);
+            _hasValidBaseColor = true;
+            InputMessage = "Base color set from HSV.";
+        }
+
+        // When input changes, palette feedback no longer applies
+        PaletteMessage = string.Empty;
+    }
+
+    void ResetInputs()
+    {
+		// Reset to defaults
+		BaseHex = string.Empty;
+        HSV_Hue = 0;
+        HSV_Saturation = 0;
+        HSV_Value = 0;
+
+        Palette.Clear();
+        ExportJson = string.Empty;
+        InputMessage = "Inputs reset. Enter a new color to generate a palette.";
 	}
 }
 
