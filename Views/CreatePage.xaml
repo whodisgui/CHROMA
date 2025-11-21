@@ -12,9 +12,11 @@
 			<!-- Section 1: Color Input + Input Mode (HEX or HSV) -->
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
-					<Label Text="Base Color" FontAttributes="Bold" />
-					
-					<!-- Input mode picker -->
+					<Label Text="Select a Base Color"
+							   FontAttributes="Bold"
+							   FontSize="16"/>
+
+						<!-- Input mode picker -->
 					<HorizontalStackLayout Spacing="8">
 						<Label Text="Mode:" VerticalOptions="Center" />
 						<Picker ItemsSource="{Binding InputModes}"
