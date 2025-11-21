@@ -1,4 +1,4 @@
-using CHROMA.Services;
+﻿using CHROMA.Services;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using System;
@@ -11,51 +11,80 @@ using System.Windows.Input;
 
 namespace CHROMA.ViewModels;
 
+/* ===FILE SUMMARY===
+ * Main view‑model for the "Create" tab/page in CHROMA.
+ * 
+ * Responsibilities:
+ *   - Accept base color input in either HEX (#RRGGBB) or HSV form
+ *   - Track which input mode is active and expose helper flags for XAML visibility
+ *   - Let the user pick a harmony scheme (Monochromatic, Complementary, etc.)
+ *   - Generate a palette (ObservableCollection<ColorSlotViewModel>) via HarmonyGenerator
+ *   - Provide user‑facing messages for validation and palette status
+ *   - Offer commands for Apply, Generate, Save (stub), Export JSON, and Reset
+ * 
+ * This class is the "glue" between the XAML UI and the pure color‑math services.
+ */
+
+
+
 public class CreateViewModel : BaseViewModel
 {
-	// ==== INPUT HERE ==========================================
+	/* ==== INPUT HERE ==========================================
+    *  Raw input fields + derived state for the base color used
+    *  to generate palettes.
+    */
 
 	string _baseHex = string.Empty;
 	Color _baseColor = Colors.Transparent;
-    string _inputMessage = string.Empty;
-    string _paletteMessage = string.Empty;
+    string _inputMessage = string.Empty;    // Feedback about the most recent input action (valid/invalid).
+	string _paletteMessage = string.Empty;  // Feedback about the most recent palette generation/export.
 
-    public string BaseHex
+	// HEX string the user types into the input box.
+    // This is NOT validated until ApplyInput() is called.
+	public string BaseHex
     {
         get => _baseHex;
         set
         {
 			if (SetProperty(ref _baseHex, value, nameof(BaseHex)))
 			{
+                // Keep the preview label up to date as the user types.
 				OnPropertyChanged(nameof(BaseHexPreview));
 			}
 		}
     }
 
-    public string BaseHexPreview => $"Current: {BaseHex}";
-    
-    public Color BaseColor
+	// Small text preview that simply echoes the current HEX input.
+	public string BaseHexPreview => $"Current: {BaseHex}";
+
+	// Canonical base color for the current palette (in MAUI Color form).
+	// This is set only after input has been validated and applied.
+	public Color BaseColor
     {
         get => _baseColor;
         private set => SetProperty(ref _baseColor, value, nameof(BaseColor));
     }
 
-    public string InputMessage
+	// Message shown near the input controls (validation errors, success messages, etc.).
+	public string InputMessage
     {
         get => _inputMessage;
         private set => SetProperty(ref _inputMessage, value, nameof(InputMessage));
     }
 
-    public string PaletteMessage
+	// Message shown near the palette section (e.g., errors when generating, export status).
+	public string PaletteMessage
     {
         get => _paletteMessage;
         private set => SetProperty(ref _paletteMessage, value, nameof(PaletteMessage));
     }
 
 
-	// ==== INPUT HERE (Hex or HSV) =============================
-	
-    public ObservableCollection<string> InputModes { get; } = new(new[] { "HEX", "HSV" });
+	/* ==== INPUT HERE (Hex or HSV) =============================
+	*  Mode selection allows the user to choose between HEX and HSV entry styles.
+	*/
+
+	public ObservableCollection<string> InputModes { get; } = new(new[] { "HEX", "HSV" });
 
     string _selectedInputMode = "HEX";
     public string SelectedInputMode
@@ -65,39 +94,46 @@ public class CreateViewModel : BaseViewModel
         {
             if (SetProperty(ref _selectedInputMode, value, nameof(SelectedInputMode)))
             {
-				// Notify XAML visibility bindings
+				// Notify XAML visibility bindings so the UI can swap between HEX and HSV sections.
 				OnPropertyChanged(nameof(IsHexMode));
 				OnPropertyChanged(nameof(IsHSVMode));
 
-                ResetInputs();
+				// When changing modes, wipe any stale values so we don't mix assumptions.
+				ResetInputs();
 			}
         }
     }
 
-    // Convenience bools for XAML visibility
-    public bool _hasValidBaseColor = false;
+	// Convenience bools for XAML visibility
+	// Tracks whether ApplyInput() has successfully validated and stored a base color.
+	public bool _hasValidBaseColor = false;
     public bool IsHexMode => SelectedInputMode == "HEX";
     public bool IsHSVMode => SelectedInputMode == "HSV";
 
 
-    // ==== HSV INPUT (when SelectedInputMode == "HSV") =========
+	/* ==== HSV INPUT (when SelectedInputMode == "HSV") =========
+    *  These properties are bound to HSV sliders / numeric inputs in the UI.
+    */
 
-    double _hsvHue;
+	double _hsvHue;
     double _hsvSaturation = 100; // user-facing % 0-100
     double _hsvValue = 100;      // user-facing % 0-100
 
-    public double HSV_Hue
+	// Hue in degrees (0–360). The UI is responsible for constraining to a sensible range.
+	public double HSV_Hue
     {
         get => _hsvHue;
         set => SetProperty(ref _hsvHue, value, nameof(HSV_Hue));
     }
 
+	// Saturation as a percentage (0–100) from the user's perspective.
 	public double HSV_Saturation
 	{
 		get => _hsvSaturation;
 		set => SetProperty(ref _hsvSaturation, value, nameof(HSV_Saturation));
 	}
 
+	// Value (brightness) as a percentage (0–100).
 	public double HSV_Value
 	{
 		get => _hsvValue;
@@ -105,7 +141,9 @@ public class CreateViewModel : BaseViewModel
 	}
 
 
-	// ==== SCHEME SELECTION ====================================
+	/* ==== SCHEME SELECTION ====================================
+	*  List of scheme names displayed in the picker/dropdown on the Create page.
+	*/
 
 	public ObservableCollection<string> Schemes { get; } =
         new(new[]{
@@ -117,6 +155,7 @@ public class CreateViewModel : BaseViewModel
             "Tetradic",
         });
 
+	// Currently selected harmony scheme label. Used to pick the matching HarmonyScheme enum.
 	string _selectedScheme = "Monochromatic"; //Sample Starter Chosen Scheme
 
     public string SelectedScheme
@@ -126,7 +165,9 @@ public class CreateViewModel : BaseViewModel
         {
 			if (SetProperty(ref _selectedScheme, value, nameof(SelectedScheme)))
             {
-                GeneratePalette();
+				// Whenever the user changes schemes, immediately recompute the palette
+				// (assuming a valid base color is already set).
+				GeneratePalette();
             }
 		}
 	}
@@ -134,8 +175,10 @@ public class CreateViewModel : BaseViewModel
 
 	// ==== GENERATED PALETTE + EXPORT ==========================
 
+	// The current set of generated palette slots. Bound to a UI list of swatches.
 	public ObservableCollection<ColorSlotViewModel> Palette { get; } = new();
 
+	// JSON export string representing the current palette as a list of hex codes.
 	string _exportJson = string.Empty;
     public string ExportJson
     {
@@ -143,13 +186,19 @@ public class CreateViewModel : BaseViewModel
         private set => SetProperty(ref _exportJson, value, nameof(ExportJson));
     }
 
-    // Simple 60/30/10 suggestion based on palette size (FR3/FR4 hook). :contentReference[oaicite:9]{index=9}
-    public double PrimaryRatio => 0.6;
+	/* ===SUMMARY===
+    *  Simple 60/30/10 suggestion based on palette size
+    *  These values are exposed so the visualization layer can show a proportional usage hint
+    *  (e.g., primary color ~60%, secondary ~30%, accent ~10%).
+    */
+	public double PrimaryRatio => 0.6;
     public double SecondaryRatio => 0.3;
     public double AccentRatio => 0.1;
 
 
-	// ==== COMMANDS ============================================
+	/* ==== COMMANDS ============================================
+	*  Commands are bound to buttons in XAML to trigger actions from the UI layer.
+	*/
 
 	public ICommand GenerateCommand => new Command(GeneratePalette);
 	public ICommand SaveCommand => new Command(Save);
@@ -158,9 +207,13 @@ public class CreateViewModel : BaseViewModel
     public ICommand ResetCommand => new Command(ResetInputs);
 
 
-	// ==== CORE LOGIC ==========================================
+	/* ==== CORE LOGIC ==========================================
+	*  Private helpers that implement the actual behavior of the commands / UI interactions.
+	*/
 
-    void UpdateBaseFromHex()
+	// Re-computes the base color from the BaseHex string and regenerates the palette.
+	// Currently unused by commands in favor of ApplyInput(), but kept as a focused helper.
+	void UpdateBaseFromHex()
     {
 		if (!ColorMathService.TryParseHex(BaseHex, out var color))
         {
@@ -173,7 +226,8 @@ public class CreateViewModel : BaseViewModel
 		GeneratePalette();
 	}
 
-    void UpdateBaseFromHSV()
+	// Re-computes the base color from the HSV sliders and regenerates the palette.
+	void UpdateBaseFromHSV()
     {
         var hsv = new HSVColor(
             HSV_Hue,
@@ -188,7 +242,9 @@ public class CreateViewModel : BaseViewModel
         GeneratePalette();
     }
 
-    void GeneratePalette()
+	// Central routine that turns the current base color + selected scheme into a palette.
+	// It respects the selected input mode (HEX/HSV) and validates input before generating.
+	void GeneratePalette()
     {
         if (!_hasValidBaseColor)
         {
@@ -217,7 +273,8 @@ public class CreateViewModel : BaseViewModel
             color = ColorMathService.FromHSV(hsv);
         }
 
-        var scheme = SelectedScheme switch
+		// Map the selected scheme string to the internal HarmonyScheme enum.
+		var scheme = SelectedScheme switch
         {
             "Monochromatic"       => HarmonyScheme.Monochromatic,
             "Complementary"       => HarmonyScheme.Complementary,
@@ -230,6 +287,7 @@ public class CreateViewModel : BaseViewModel
 
 		var generated = HarmonyGenerator.Generate(baseHSL, scheme);
 
+		// Rebuild the palette collection so the UI updates its swatch list.
 		Palette.Clear();
 
         for (int i = 0; i < generated.Length; i++)
@@ -242,16 +300,20 @@ public class CreateViewModel : BaseViewModel
 		}
 
         PaletteMessage = $"Generated {Palette.Count} colors using {SelectedScheme}.";
+		// Clear any previous export text so the user knows this palette hasn't been exported yet.
 		ExportJson = string.Empty;
 	}
 
     void Save()
     {
 		// Hook point for JSON file save later. For now, just acknowledge the action.
+		// When the persistence layer is implemented, this will write the current palette to disk.
 		InputMessage = "Palette saved (stub - wire to JSON file save/load next).";
 	}
 
-    void ExportPaletteJson()
+	// Builds a JSON array of hex codes representing the current palette.
+	// The resulting string is bound to a text box for copy‑paste or later file saving.
+	void ExportPaletteJson()
     {
 		var hexList = Palette
 			.Select(p => ColorMathService.ToHex(p.Color))
@@ -265,7 +327,9 @@ public class CreateViewModel : BaseViewModel
 		PaletteMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
 	}
 
-    void ApplyInput()
+	// Validates the current input (HEX or HSV depending on mode) and stores it as BaseColor.
+	// Also flips the _hasValidBaseColor flag so GeneratePalette() can proceed.
+	void ApplyInput()
     {
         // Treat "Enter" as: validate/apply current input and regenerate.
         if (IsHexMode)
@@ -298,7 +362,8 @@ public class CreateViewModel : BaseViewModel
         PaletteMessage = string.Empty;
     }
 
-    void ResetInputs()
+	// Resets all user inputs and clears the current palette/export state.
+	void ResetInputs()
     {
 		// Reset to defaults
 		BaseHex = string.Empty;
@@ -313,7 +378,11 @@ public class CreateViewModel : BaseViewModel
 }
 
 // Minimal base classes
+// BaseViewModel exists so additional shared behavior can be added later if needed.
 public class BaseViewModel : ObservableObject { }
+
+// Lightweight implementation of INotifyPropertyChanged for MVVM binding.
+// SetProperty propagates changes to the UI whenever a property value actually changes.
 public class ObservableObject : System.ComponentModel.INotifyPropertyChanged
 {
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;

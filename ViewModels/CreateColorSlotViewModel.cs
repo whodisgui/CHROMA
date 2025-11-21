@@ -8,8 +8,24 @@ using System.Threading.Tasks;
 
 namespace CHROMA.ViewModels;
 
+/* ===FILE SUMMARY===
+ * View‑model for a single palette entry on the Create page.
+ * 
+ * Holds:
+ *   - A label (e.g. "Color 1", "Complement")
+ *   - The color stored in HSL form (internal) plus a MAUI Color (for binding)
+ *   - Adjustable saturation and lightness sliders
+ * 
+ * The hue component is intentionally fixed so users can only tweak S and L.
+ * This class inherits from ObservableObject so that UI bindings update automatically
+ * whenever properties change.
+ */
+
+
+
 public class ColorSlotViewModel : ObservableObject
 {
+	// Hue is fixed for this slot; only saturation/lightness can be tweaked by the user.
 	readonly double _hue;
 
 	double _saturation;
@@ -26,6 +42,7 @@ public class ColorSlotViewModel : ObservableObject
 		_color = ColorMathService.FromHSL(hsl);
 	}
 
+	// Human‑readable label shown in the UI (e.g., "Color 1" or "Complement").
 	public string Label
 	{
 		get => _label;
@@ -34,6 +51,9 @@ public class ColorSlotViewModel : ObservableObject
 
 	/* ===SUMMARY===
     * Bound to a BoxView or Border.
+    * 
+    * Current display color for this slot.
+    * Updating Saturation/Lightness will recalculate this value.
     */
 	public Color Color
 	{
@@ -43,6 +63,9 @@ public class ColorSlotViewModel : ObservableObject
 
 	/* ===SUMMARY===
     * S ∈ [0,1]. Only this + Lightness are tweakable by user.
+    * 
+    * Saturation slider backing field. Whenever this changes (and is clamped into [0,1]),
+    * UpdateColor() is called to keep the UI swatch in sync.
     */
 	public double Saturation
 	{
@@ -56,6 +79,9 @@ public class ColorSlotViewModel : ObservableObject
 
 	/* ===SUMMARY===
     * L ∈ [0,1]. Only this + Saturation are tweakable by user.
+    * 
+    * Lightness slider backing field. Changing this recomputes the Color while
+    * keeping the hue fixed.
     */
 	public double Lightness
 	{
@@ -67,6 +93,8 @@ public class ColorSlotViewModel : ObservableObject
 		}
 	}
 
+	// Returns the current HSL representation for this slot, combining the fixed hue with
+	// the user-tunned saturation and lightness values.
 	public HSLColor ToHSL()
 	{
 		return new HSLColor(_hue, _saturation, _lightness);
@@ -75,9 +103,11 @@ public class ColorSlotViewModel : ObservableObject
 	void UpdateColor()
 	{
 		// NOTE: hue is intentionally not exposed or changed here.
+		// This enforces the "keep hue, tweak only S/L" rule.
 		Color = ColorMathService.FromHSL(new HSLColor(_hue, _saturation, _lightness));
 	}
 
+	// Helper to constrain slider values into [0,1] to avoid invalid colors or math edge cases.
 	static double Clamp01(double v) {
 	    if (v < 0) {  return 0; }
 		if (v > 1) { return 1; }

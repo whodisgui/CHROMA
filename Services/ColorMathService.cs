@@ -7,10 +7,26 @@ using System.Threading.Tasks;
 
 namespace CHROMA.Services;
 
+/* ===FILE SUMMARY===
+ * Core color‑math helpers used by CHROMA.
+ * Contains:
+ *   - HSLColor / HSVColor lightweight structs used as internal representations
+ *   - ColorMathService: conversions between HEX, RGB (Color), HSL, and HSV
+ *   - HarmonyScheme / HarmonyGenerator: helpers for generating color harmony palettes
+ * 
+ * This file is intentionally UI‑agnostic and can be unit‑tested in isolation.
+ */
+
+
+
 /* ===SUMMARY===
 * Simple HSL Color Struct for Internal Math
 * Hue (H) in [0, 360),
 * Saturation (S) and Lightness (L) in [0,1].
+* 
+* Immutable Representation of an HSL color used throughout the app's color math.
+* Constructor automatically normalizes (or "clamps") channel values (H, S, and L)
+* so callers can assume validity.
 */
 public readonly struct HSLColor
 {
@@ -25,6 +41,10 @@ public readonly struct HSLColor
 		L = Clamp01(l);
 	}
 
+	/* ===SUMMARY===
+	* Wraps any hue into canonical [0,360) range (based on what degree they
+	* sit on in the color wheel) so hue math can be done with simple arithmetic.
+	*/
 	internal static double NormalizeHue(double h)
 	{
 		h %= 360.0;
@@ -32,6 +52,11 @@ public readonly struct HSLColor
 		return h;
 	}
 
+	/* ===SUMMARY===
+	* Saturation (S) represents color intensity; Lightness (L) represents
+	* how light or dark it is (both range from 0-100).
+	* This keeps them within that range (reduced to [0,1]).
+	*/
 	internal static double Clamp01(double v)
 	{
 		if (v < 0) { return 0; }
@@ -39,6 +64,7 @@ public readonly struct HSLColor
 		else { return v; }
 	}
 
+	// Convenience helper to reuse the same hue while tweaking S and L.
 	public HSLColor WithSL(double s, double l)
 	{
 		return new HSLColor(H, s, l);
@@ -55,6 +81,9 @@ public readonly struct HSLColor
 * Simple HSV Color Struct for Internal Math
 * Hue (H) in [0, 360),
 * Saturation (S) and Value (V) in [0,1].
+* 
+* Similar to HSLColor, but for HSV; mainly for user-facing
+* HSV input/preview logic.
 */
 public readonly struct HSVColor
 {
@@ -75,12 +104,18 @@ public readonly struct HSVColor
 	}
 }
 
-
+/* ===SUMMARY===
+ * Static helper for all color conversions used by the Create / Critique flows.
+ * Everything here is pure math with no UI or persistence dependencies.
+ */
 public static class ColorMathService
 {
 	/* ===SUMMARY===
 	* Parses a Hex string (RRGGBB or #RRGGBB) to a color.
 	* If invalid, returns false.
+	* 
+	* Returns a MAUI Color from a hex string, or false if the string is malformed.
+	* This is the main entry point for user-supplied HEX in the Create page.
 	*/
 	public static bool TryParseHex(string? hex, out Color color)
 	{
@@ -102,7 +137,8 @@ public static class ColorMathService
 		return true;
 	}
 
-	//Translates Color code to Hex
+	// Translates a Color to a #RRGGBB hex string (no alpha).
+	// Used for exporting palettes annd for displaying swatches as hex codes.
 	public static string ToHex(Color color)
 	{
 		var r = (int)Math.Round(color.Red * 255);
@@ -112,7 +148,10 @@ public static class ColorMathService
 	}
 
 	/* ===SUMMARY===
-	* Converts RGB Color to HSL (Standard Definition) 
+	* Converts RGB Color to HSL (Standard Definition)
+	* 
+	* Converts from MAUI's RGB-based Color into the internal HSL representation.
+	* This is the main bridge for "artist-friendly" hue/saturation/lightness logic.
 	*/
 	public static HSLColor ToHSL(Color color)
 	{
@@ -151,6 +190,9 @@ public static class ColorMathService
 
 	/* ===SUMMARY===
     * Converts HSL to RGB Color using standard hexcone math.
+    * 
+    * Inverse of ToHSLColor: takes a normalize HSL color and
+    * produces a displayable MAUI color.
     */
 	public static Color FromHSL(HSLColor hsl)
 	{
@@ -181,6 +223,9 @@ public static class ColorMathService
 
 	/* ===SUMMARY===
     * Converts RGB Color to HSV.
+    * 
+    * Basically converts a display color into HSV space;
+    * mainly used for driving HSV sliders and input.
     */
 	public static HSVColor ToHSV(Color color)
 	{
@@ -215,6 +260,8 @@ public static class ColorMathService
 
 	/* ===SUMMARY===
      * Converts HSV to RGB Color.
+     * 
+     * Inverse of ToHSV: takes a hue/saturation/value triple and returns a displayable Color.
      */
 	public static Color FromHSV(HSVColor hsv)
 	{
@@ -244,6 +291,9 @@ public static class ColorMathService
 
 	/* ===SUMMARY===
      * Converts HSL to HSV with same hue.
+     * 
+     * Basically converts an HSL color into HSV while preserving hue,
+     * useful when users switch innput modes.
      */
 	public static HSVColor HSLToHSV(HSLColor hsl)
 	{
@@ -258,6 +308,9 @@ public static class ColorMathService
 
 	/* ===SUMMARY===
      * Converts HSV to HSL with same hue.
+     * 
+     * Basically, converts an HSV color into HSL while, again,
+     * preserving hue for mode switching.
      */
 	public static HSLColor HSVToHSL(HSVColor hsv)
 	{
@@ -279,6 +332,8 @@ public static class ColorMathService
 
 /* ===SUMMARY===
 * The 6 Color Harmony Schemes that can be used on the CreatePage
+* 
+* These map directly to the options in the Create page's scheme picker.
 */
 public enum HarmonyScheme
 {
@@ -292,6 +347,9 @@ public enum HarmonyScheme
 
 /* ===SUMMARY===
 * Generates complementing colors based on each Color Harmony Scheme
+* 
+* Givenn a base HSL color and a selected scheme, returns the derived HSL palette
+* (still in HSL so the UI can later tweak saturation/lightness per slot).
 */
 public static class HarmonyGenerator
 {
@@ -302,6 +360,7 @@ public static class HarmonyGenerator
 		{
 			case HarmonyScheme.Monochromatic:
 				// Same hue; vary S and L but keep them in a usable range
+				// to avoid washed-out or overly dark swatches.
 				return new[]
 				{
 					baseColor.WithSL(baseColor.S * 0.3, ClampMid(baseColor.L * 0.6)),
@@ -355,10 +414,12 @@ public static class HarmonyGenerator
 				};
 
 			default:
+				// Fallback: just return the base color if something unexpected slips through.
 				return new[] { baseColor };
 		}
 	}
 
+	// Clamps values into [0,1] but is conceptually used to keep lightness in a mid-usable range.
 	static double ClampMid(double v)
 	{
 		if (v < 0) { v = 0; }
