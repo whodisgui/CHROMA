@@ -1,9 +1,10 @@
-﻿using Microsoft.Maui.Graphics;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
+using Microsoft.Maui.Graphics;
 
 namespace CHROMA.Services;
 
@@ -126,7 +127,7 @@ public static class ColorMathService
 		if (hex.StartsWith("#")) { hex = hex[1..]; }
 		if (hex.Length != 6) { return false; }
 
-		if(!int.TryParse(hex[..2], System.Globalization.NumberStyles.HexNumber, null, out var rByte) ||
+		if (!int.TryParse(hex[..2], System.Globalization.NumberStyles.HexNumber, null, out var rByte) ||
 		   !int.TryParse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber, null, out var gByte) ||
 		   !int.TryParse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber, null, out var bByte))
 		{
@@ -136,6 +137,46 @@ public static class ColorMathService
 		color = new Color((float)(rByte / 255.0), (float)(gByte / 255.0), (float)(bByte / 255.0));
 		return true;
 	}
+
+
+	/* ===SUMMARY===
+	* Attempts to resolve a standard named color (e.g. "Red", "LightGray") to a MAUI Color.
+	* 
+	* Names map to properties on Microsoft.Maui.Graphics.Colors. library
+	* Returns false if no matching color is found.
+	*/
+	public static bool TryParseNamedColor(string? name, out Color color)
+	{
+		color = Colors.Transparent;
+		if (string.IsNullOrWhiteSpace(name)) { return false; }
+
+		// Normalizes string by stripping spaces & dashes
+		// so e.g. "light gray", "Light-Gray" → "lightgray"
+		var normalized = new string(
+			name.Trim()
+				.Where(c => !char.IsWhiteSpace(c) && c != '-' && c != '_')
+			    .ToArray()
+		);
+
+		/* ===SUMMARY===
+		*  Colors defines fields, not properties:
+		*  MAUI's color library: "148 public static readonly fields for common colors"
+		*  So GetFields must be utilized.
+		*/
+		var field = typeof(Colors)
+			.GetFields(BindingFlags.Public | BindingFlags.Static)
+			.FirstOrDefault(f =>
+				string.Equals(f.Name, normalized, StringComparison.OrdinalIgnoreCase));
+
+		if (field?.GetValue(null) is Color found)
+		{
+			color = found;
+			return true;
+		}
+
+		return false;
+	}
+
 
 	// Translates a Color to a #RRGGBB hex string (no alpha).
 	// Used for exporting palettes annd for displaying swatches as hex codes.

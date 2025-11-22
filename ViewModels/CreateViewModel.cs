@@ -80,26 +80,43 @@ public class CreateViewModel : BaseViewModel
     }
 
 
-	/* ==== INPUT HERE (Hex or HSV) =============================
+	/* ==== INPUT HERE (Name / Hex / HSV / HSL) =============================
 	*  Mode selection allows the user to choose between HEX and HSV entry styles.
+	*  Once a valid base color has been applied, the mode is locked until
+	*  a new session is triggered (by pressing 'Reset').
 	*/
 
-	public ObservableCollection<string> InputModes { get; } = new(new[] { "HEX", "HSV" });
+	public ObservableCollection<string> InputModes { get; } =
+        new(new[] { "Name", "HEX", "HSV", "HSL" });
 
-    string _selectedInputMode = "HEX";
+    string _selectedInputMode = "Name";
+    bool _inputModeLocked = false;
+
     public string SelectedInputMode
     {
         get => _selectedInputMode;
         set
         {
+            // When an input mode is locked, ignore attempts to change it from the UI.
+            if (_inputModeLocked && value != _selectedInputMode)
+            {
+                //Re-raise property so bindings re-sync the picker selection.
+                OnPropertyChanged(nameof(SelectedInputMode));
+                return;
+            }
+
             if (SetProperty(ref _selectedInputMode, value, nameof(SelectedInputMode)))
             {
 				// Notify XAML visibility bindings so the UI can swap between HEX and HSV sections.
 				OnPropertyChanged(nameof(IsHexMode));
 				OnPropertyChanged(nameof(IsHSVMode));
+                OnPropertyChanged(nameof(IsHSLMode));
+                OnPropertyChanged(nameof(IsNamedMode));
+                OnPropertyChanged(nameof(CanChangeInputMode));
 
-				// When changing modes, wipe any stale values so we don't mix assumptions.
-				ResetInputs();
+                // Swapping modes mid-session should clear any stale numeric/text values
+                // but it should NOT unlock a previously locked mode.
+				ClearInputState();
 			}
         }
     }
@@ -107,14 +124,20 @@ public class CreateViewModel : BaseViewModel
 	// Convenience bools for XAML visibility
 	// Tracks whether ApplyInput() has successfully validated and stored a base color.
 	public bool _hasValidBaseColor = false;
-    public bool IsHexMode => SelectedInputMode == "HEX";
+
+	public bool IsNamedMode => SelectedInputMode == "Name";
+	public bool IsHexMode => SelectedInputMode == "HEX";
     public bool IsHSVMode => SelectedInputMode == "HSV";
+    public bool IsHSLMode => SelectedInputMode == "HSL";
+
+    // Expose whether the Picker should be interactive.
+    public bool CanChangeInputMode => !_inputModeLocked;
+	public bool IsInputModeLocked => _inputModeLocked;
 
 
 	/* ==== HSV INPUT (when SelectedInputMode == "HSV") =========
     *  These properties are bound to HSV sliders / numeric inputs in the UI.
     */
-
 	double _hsvHue;
     double _hsvSaturation = 100; // user-facing % 0-100
     double _hsvValue = 100;      // user-facing % 0-100
@@ -139,6 +162,45 @@ public class CreateViewModel : BaseViewModel
 		get => _hsvValue;
 		set => SetProperty(ref _hsvValue, value, nameof(HSV_Value));
 	}
+
+
+    /* ==== HSL INPUT (when SelectedInputMode == "HSL") =========
+    *  Similar shape to the HSV fields but uses Hue / Saturation / Lightness.
+    *  Saturationn and Lightness are exposed as 0-100 percentages for the UI.
+    */
+    double _hslHue;
+    double _hslSaturation = 100;
+    double _hslLightness = 100;
+
+    public double HSL_Hue
+    {
+        get => _hslHue;
+        set => SetProperty(ref _hslHue, value, nameof(HSL_Hue));
+    }
+
+	public double HSL_Saturation
+    {
+        get => _hslSaturation;
+        set => SetProperty(ref _hslSaturation, value, nameof(HSL_Saturation));
+    }
+
+    public double HSL_Lightness
+    {
+        get => _hslLightness;
+        set => SetProperty(ref _hslLightness, value, nameof(HSL_Lightness));
+    }
+
+
+    /* ==== Name INPUT (when SelectedInputMode == "Name") =======
+    *  Allows user to input standard color name (e.g., "Red", "LightGray", etc.)
+    */
+    string _namedColorName = string.Empty;
+    public string NamedColorName
+    {
+        get => _namedColorName;
+        set => SetProperty(ref _namedColorName, value, nameof(NamedColorName));
+    }
+
 
 
 	/* ==== SCHEME SELECTION ====================================
@@ -252,9 +314,10 @@ public class CreateViewModel : BaseViewModel
             return;
         }
 
-        var color = BaseColor;
-        var baseHSL = ColorMathService.ToHSL(color);
+        Color color;
 
+        // Re-derive base color from current input controls
+        // so that the user can tweak raw values and hit "generate" again.
         if (IsHexMode)
         {
             if (!ColorMathService.TryParseHex(BaseHex, out color))
@@ -263,7 +326,7 @@ public class CreateViewModel : BaseViewModel
                 return;
             }
         }
-        else // HSV mode
+        else if (IsHSVMode)
         {
             var hsv = new HSVColor(
                 HSV_Hue,
@@ -272,18 +335,40 @@ public class CreateViewModel : BaseViewModel
 
             color = ColorMathService.FromHSV(hsv);
         }
+        else if (IsHSLMode)
+        {
+            var hsl = new HSLColor(
+                HSL_Hue,
+                HSL_Saturation / 100.0,
+                HSL_Lightness / 100.0);
 
-		// Map the selected scheme string to the internal HarmonyScheme enum.
-		var scheme = SelectedScheme switch
+            color = ColorMathService.FromHSL(hsl);
+        }
+        else if (IsNamedMode)
+        {
+            if (!ColorMathService.TryParseNamedColor(NamedColorName, out color))
+            {
+                return;
+            }
+        }
+        else
+        {
+            return;
+        }
+
+        var baseHSL = ColorMathService.ToHSL(color);
+
+        // Map the selected scheme string to the internal HarmonyScheme enum.
+        var scheme = SelectedScheme switch
         {
             "Monochromatic"       => HarmonyScheme.Monochromatic,
             "Complementary"       => HarmonyScheme.Complementary,
-			"Split-Complementary" => HarmonyScheme.SplitComplementary,
+            "Split-Complementary" => HarmonyScheme.SplitComplementary,
             "Analogous"           => HarmonyScheme.Analogous,
             "Triadic"             => HarmonyScheme.Triadic,
             "Tetradic"            => HarmonyScheme.Tetradic,
-			_                     => HarmonyScheme.Monochromatic
-		};
+            _                     => HarmonyScheme.Monochromatic
+        };
 
 		var generated = HarmonyGenerator.Generate(baseHSL, scheme);
 
@@ -327,14 +412,71 @@ public class CreateViewModel : BaseViewModel
 		PaletteMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
 	}
 
-	// Validates the current input (HEX or HSV depending on mode) and stores it as BaseColor.
-	// Also flips the _hasValidBaseColor flag so GeneratePalette() can proceed.
-	void ApplyInput()
+
+	// Resets all user inputs, unlocks input mode, and clears the current palette/export state.
+	void ResetInputs()
     {
+        ClearInputState();
+
+        _inputModeLocked = false;
+        OnPropertyChanged(nameof(IsInputModeLocked));
+        OnPropertyChanged(nameof(CanChangeInputMode));
+
+        InputMessage = "Inputs reset. Enter a new color to generate a palette.";
+    }
+
+    // Clears all user-editable input fields and palette state,
+    // but doesn't change current selected input mode or lock flags.
+    void ClearInputState()
+    {
+        BaseHex = string.Empty;
+
+        HSV_Hue = 0;
+        HSV_Saturation = 0;
+        HSV_Value = 0;
+
+        HSL_Hue = 0;
+        HSL_Saturation = 0;
+        HSL_Lightness = 0;
+
+        NamedColorName = string.Empty;
+
+        BaseColor = Colors.Transparent;
+        _hasValidBaseColor = false;
+
+        Palette.Clear();
+        ExportJson = string.Empty;
+        PaletteMessage = string.Empty;
+    }
+
+
+	/* === SUMMARY ===
+	*  Validates the current input (HEX / HSV / HSL / Name depending on mode)
+    *  and stores it as BaseColor.
+    *  Also flips the _hasValidBaseColor flag so GeneratePalette() can proceed
+    *  in locks input mode.
+	*/
+	void ApplyInput()
+	{
         // Treat "Enter" as: validate/apply current input and regenerate.
-        if (IsHexMode)
+        Color color;
+
+        if (IsNamedMode)
         {
-            if (!ColorMathService.TryParseHex(BaseHex, out var color))
+            if (!ColorMathService.TryParseNamedColor(NamedColorName, out color))
+            {
+                InputMessage = "Unknown color name. Try something like Red, LightGray, or CornflowerBlue.";
+                _hasValidBaseColor = false;
+                return;
+			}
+
+            BaseColor = color;
+            _hasValidBaseColor = true;
+			InputMessage = $"Base color set from name \"{NamedColorName}\".";
+		}
+        else if (IsHexMode)
+        {
+            if (!ColorMathService.TryParseHex(BaseHex, out color))
             {
                 InputMessage = "Invalid HEX Color. Expected format = '#RRGGBB'; values = 0-9 and A-F.";
                 _hasValidBaseColor = false;
@@ -345,35 +487,43 @@ public class CreateViewModel : BaseViewModel
             _hasValidBaseColor = true;
             InputMessage = "Base color set from HEX.";
         }
-        else  // HSV mode
+        else if (IsHSVMode)
         {
             var hsv = new HSVColor(
                 HSV_Hue,
                 HSV_Saturation / 100.0,
                 HSV_Value / 100.0);
 
-            // Range checks (e.g. 0-360, 0-100)
+            // Range checks (e.g. 0-360, 0-100) handled by UI or clamped in color math.
             BaseColor = ColorMathService.FromHSV(hsv);
             _hasValidBaseColor = true;
             InputMessage = "Base color set from HSV.";
         }
+        else if (IsHSLMode)
+        {
+            var hsl = new HSLColor(
+                HSL_Hue,
+                HSL_Saturation / 100.0,
+                HSL_Lightness / 100.0);
 
-        // When input changes, palette feedback no longer applies
+            BaseColor = ColorMathService.FromHSL(hsl);
+            _hasValidBaseColor = true;
+            InputMessage = "Base color set from HSL.";
+        }
+        else
+        {
+            _hasValidBaseColor = false;
+            InputMessage = "Unsupported input type.";
+            return;
+        }
+
+        // Once base color is successfully applied, input mode is locked until explicit reset.
+        _inputModeLocked = true;
+        OnPropertyChanged(nameof(IsInputModeLocked));
+		OnPropertyChanged(nameof(CanChangeInputMode));
+
+        // When input changes, palette message no longer applies.
         PaletteMessage = string.Empty;
-    }
-
-	// Resets all user inputs and clears the current palette/export state.
-	void ResetInputs()
-    {
-		// Reset to defaults
-		BaseHex = string.Empty;
-        HSV_Hue = 0;
-        HSV_Saturation = 0;
-        HSV_Value = 0;
-
-        Palette.Clear();
-        ExportJson = string.Empty;
-        InputMessage = "Inputs reset. Enter a new color to generate a palette.";
 	}
 }
 

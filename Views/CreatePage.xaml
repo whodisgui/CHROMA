@@ -21,10 +21,19 @@
 						<Label Text="Mode:" VerticalOptions="Center" />
 						<Picker ItemsSource="{Binding InputModes}"
 								SelectedItem="{Binding SelectedInputMode}"
-								WidthRequest="120" />
+								IsEnabled="{Binding CanChangeInputMode}"
+								WidthRequest="80" />
 					</HorizontalStackLayout>
 					
-					<!-- HEX input block-->
+					<!-- Named color input block -->
+					<VerticalStackLayout Spacing="4"
+										 IsVisible="{Binding IsNamedMode}">
+						<Label Text="Color Name" />
+						<Entry Text="{Binding NamedColorName}"
+							   Placeholder="e.g., Red, Indigo, CornflowerBlue" />
+					</VerticalStackLayout>
+					
+					<!-- HEX input block -->
 					<VerticalStackLayout Spacing="4"
 										 IsVisible="{Binding IsHexMode}">
 						<Grid ColumnDefinitions="*,*"
@@ -41,7 +50,7 @@
 						</Grid>
 					</VerticalStackLayout>
 					
-					<!-- HSV input block-->
+					<!-- HSV input block -->
 					<VerticalStackLayout Spacing="4"
 										 IsVisible="{Binding IsHSVMode}">
 						<Label Text="HSV input" />
@@ -64,6 +73,33 @@
 								<Entry Text="{Binding HSV_Value}"
 									   Keyboard="Numeric"
 									   Placeholder="90" />
+							</VerticalStackLayout>
+						</Grid>
+					</VerticalStackLayout>
+					
+					<!-- HSL input block -->
+					<VerticalStackLayout Spacing="4"
+										 IsVisible="{Binding IsHSLMode}">
+						<Label Text="HSL input" />
+						<Grid ColumnDefinitions="*,*,*"
+							  ColumnSpacing="8">
+							<VerticalStackLayout Grid.Column="0">
+								<Label Text="Hue (0–360°)" FontSize="11" />
+								<Entry Text="{Binding HSL_Hue}"
+									   Keyboard="Numeric"
+									   Placeholder="210" />
+							</VerticalStackLayout>
+							<VerticalStackLayout Grid.Column="1">
+								<Label Text="Sat (0–100%)" FontSize="11" />
+								<Entry Text="{Binding HSL_Saturation}"
+                                       Keyboard="Numeric"
+                                       Placeholder="50" />
+							</VerticalStackLayout>
+							<VerticalStackLayout Grid.Column="2">
+								<Label Text="Light (0–100%)" FontSize="11" />
+								<Entry Text="{Binding HSL_Lightness}"
+                                       Keyboard="Numeric"
+                                       Placeholder="50" />
 							</VerticalStackLayout>
 						</Grid>
 					</VerticalStackLayout>
