@@ -22,7 +22,7 @@
 						<Picker ItemsSource="{Binding InputModes}"
 								SelectedItem="{Binding SelectedInputMode}"
 								IsEnabled="{Binding CanChangeInputMode}"
-								WidthRequest="100" />
+								WidthRequest="80" />
 					</HorizontalStackLayout>
 					
 					<!-- Named color input block -->
@@ -141,25 +141,24 @@
 					<!-- Swatch Display (Border + Grid Combo) -->
 					<CollectionView ItemsSource="{Binding Palette}"
 									Margin="0,12,0,0">
-					    <CollectionView.ItemsLayout>
-						    <LinearItemsLayout Orientation="Horizontal"
-                                               ItemSpacing="8" />
-						</CollectionView.ItemsLayout>
 						<CollectionView.ItemTemplate>
 							<DataTemplate x:DataType="vm:ColorSlotViewModel">
-								<VerticalStackLayout WidthRequest="100"
-                                                     Margin="0,0,8,0">
-									<Border Stroke="Gray"
-                                            StrokeThickness="1"
-                                            Padding="0">
-										<BoxView HeightRequest="60"
-                                                 Color="{Binding Color}" />
-									</Border>
-									<Label Text="{Binding Label}"
-                                           HorizontalTextAlignment="Center"
-                                           FontSize="12"
-                                           Margin="0,4,0,0" />
-								</VerticalStackLayout>
+								<Border Stroke="Lightgray"
+										StrokeThickness="1"
+										Padding="6"
+										Margin="0,0,0,6">
+									<Grid ColumnDefinitions="60,*"
+										  ColumnSpacing="8">
+										<BoxView Grid.Column="0"
+												 HeightRequest="40"
+												 VerticalOptions="Center"
+												 Color="{Binding Color}" />
+										<VerticalStackLayout Grid.Column="1"
+															 Spacing="2">
+											<Label Text="{Binding Label}" />
+										</VerticalStackLayout>
+									</Grid>
+								</Border>
 							</DataTemplate>
 						</CollectionView.ItemTemplate>
 					</CollectionView>
