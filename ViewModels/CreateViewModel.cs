@@ -223,15 +223,7 @@ public class CreateViewModel : BaseViewModel
     public string SelectedScheme
     {
 		get => _selectedScheme;
-        set
-        {
-			if (SetProperty(ref _selectedScheme, value, nameof(SelectedScheme)))
-            {
-				// Whenever the user changes schemes, immediately recompute the palette
-				// (assuming a valid base color is already set).
-				GeneratePalette();
-            }
-		}
+        set => SetProperty(ref _selectedScheme, value, nameof(SelectedScheme));
 	}
 
 
@@ -375,11 +367,30 @@ public class CreateViewModel : BaseViewModel
 		// Rebuild the palette collection so the UI updates its swatch list.
 		Palette.Clear();
 
+        // Puts labels on each color
         for (int i = 0; i < generated.Length; i++)
         {
-            string label = generated.Length == 2 && i == 1
-                ? "Complement"
-                : $"Color {i + 1}";
+            string label;
+
+            if (i == 0)
+            {
+                // Always treat first color as the base one
+                label = scheme switch {
+                    HarmonyScheme.Monochromatic => $"Color {i + 1}",
+                    _                           => $"Base Color"
+                };
+            }
+            else
+            {
+                // Names the others (sorta based on scheme)
+                label = scheme switch
+                {
+                    HarmonyScheme.Complementary      => $"Complement Color",
+                    HarmonyScheme.SplitComplementary => $"Complement Color {i}",
+                    HarmonyScheme.Monochromatic      => $"Color {i + 1}",
+                    _                                => $"Color {i}"
+                };
+            }
 
             Palette.Add(new ColorSlotViewModel(label, generated[i]));
 		}

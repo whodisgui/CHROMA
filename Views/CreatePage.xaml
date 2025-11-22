@@ -156,8 +156,6 @@
 										<VerticalStackLayout Grid.Column="1"
 															 Spacing="2">
 											<Label Text="{Binding Label}" />
-											<Label FontSize="11"
-												   Text="{Binding Lightness, StringFormat='L: {0:F2}'}" />
 										</VerticalStackLayout>
 									</Grid>
 								</Border>
