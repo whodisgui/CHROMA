@@ -166,7 +166,7 @@ public class CreateViewModel : BaseViewModel
 
     /* ==== HSL INPUT (when SelectedInputMode == "HSL") =========
     *  Similar shape to the HSV fields but uses Hue / Saturation / Lightness.
-    *  Saturationn and Lightness are exposed as 0-100 percentages for the UI.
+    *  Saturation and Lightness are exposed as 0-100 percentages for the UI.
     */
     double _hslHue;
     double _hslSaturation = 100;
@@ -254,47 +254,16 @@ public class CreateViewModel : BaseViewModel
 	*  Commands are bound to buttons in XAML to trigger actions from the UI layer.
 	*/
 
+	public ICommand ApplyInputCommand => new Command(ApplyInput);
+	public ICommand ResetCommand => new Command(ResetInputs);
 	public ICommand GenerateCommand => new Command(GeneratePalette);
 	public ICommand SaveCommand => new Command(Save);
 	public ICommand ExportJsonCommand => new Command(ExportPaletteJson);
-    public ICommand ApplyInputCommand => new Command(ApplyInput);
-    public ICommand ResetCommand => new Command(ResetInputs);
 
 
 	/* ==== CORE LOGIC ==========================================
 	*  Private helpers that implement the actual behavior of the commands / UI interactions.
 	*/
-
-	// Re-computes the base color from the BaseHex string and regenerates the palette.
-	// Currently unused by commands in favor of ApplyInput(), but kept as a focused helper.
-	void UpdateBaseFromHex()
-    {
-		if (!ColorMathService.TryParseHex(BaseHex, out var color))
-        {
-            InputMessage = "Invalid HEX Color. Expected format = '#RRGGBB'; values = 0-9 and A-F.";
-            return;
-        }
-
-        InputMessage = string.Empty;
-        BaseColor = color;
-		GeneratePalette();
-	}
-
-	// Re-computes the base color from the HSV sliders and regenerates the palette.
-	void UpdateBaseFromHSV()
-    {
-        var hsv = new HSVColor(
-            HSV_Hue,
-            HSV_Saturation / 100.0,
-            HSV_Value / 100.0);
-        // Interpret Saturation / Value as percentages 0-100
-
-        var color = ColorMathService.FromHSV(hsv);
-
-        InputMessage = string.Empty;
-        BaseColor = color;
-        GeneratePalette();
-    }
 
 	// Central routine that turns the current base color + selected scheme into a palette.
 	// It respects the selected input mode (HEX/HSV) and validates input before generating.
@@ -370,20 +339,20 @@ public class CreateViewModel : BaseViewModel
         // Puts labels on each color
         for (int i = 0; i < generated.Length; i++)
         {
-            string label;
+            string colorLabel;
 
             if (i == 0)
             {
-                // Always treat first color as the base one
-                label = scheme switch {
+				// Always treat first color as the base one
+				colorLabel = scheme switch {
                     HarmonyScheme.Monochromatic => $"Color {i + 1}",
                     _                           => $"Base Color"
                 };
             }
             else
             {
-                // Names the others (sorta based on scheme)
-                label = scheme switch
+				// Names the others (sorta based on scheme)
+				colorLabel = scheme switch
                 {
                     HarmonyScheme.Complementary      => $"Complement Color",
                     HarmonyScheme.SplitComplementary => $"Complement Color {i}",
@@ -392,7 +361,7 @@ public class CreateViewModel : BaseViewModel
                 };
             }
 
-            Palette.Add(new ColorSlotViewModel(label, generated[i]));
+            Palette.Add(new ColorSlotViewModel(colorLabel, generated[i]));
 		}
 
         PaletteMessage = $"Generated {Palette.Count} colors using {SelectedScheme}.";
