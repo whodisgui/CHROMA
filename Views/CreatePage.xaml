@@ -180,9 +180,13 @@
 									<BoxView HeightRequest="24" Color="{Binding Color}" />
 									<Label Text="Saturation" FontSize="11" />
 									<Slider Minimum="0" Maximum="1"
+											ThumbColor="#323232"
+											MinimumTrackColor="#323232"
 											Value="{Binding Saturation}" />
 									<Label Text="Lightness" FontSize="11" />
 									<Slider Minimum="0" Maximum="1"
+											ThumbColor="#323232"
+											MinimumTrackColor="#323232"
 											Value="{Binding Lightness}" />
 								</VerticalStackLayout>
 							</DataTemplate>
