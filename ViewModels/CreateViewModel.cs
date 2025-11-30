@@ -34,28 +34,9 @@ public class CreateViewModel : BaseViewModel
     *  to generate palettes.
     */
 
-	string _baseHex = string.Empty;
 	Color _baseColor = Colors.Transparent;
     string _inputMessage = string.Empty;    // Feedback about the most recent input action (valid/invalid).
 	string _paletteMessage = string.Empty;  // Feedback about the most recent palette generation/export.
-
-	// HEX string the user types into the input box.
-    // This is NOT validated until ApplyInput() is called.
-	public string BaseHex
-    {
-        get => _baseHex;
-        set
-        {
-			if (SetProperty(ref _baseHex, value, nameof(BaseHex)))
-			{
-                // Keep the preview label up to date as the user types.
-				OnPropertyChanged(nameof(BaseHexPreview));
-			}
-		}
-    }
-
-	// Small text preview that simply echoes the current HEX input.
-	public string BaseHexPreview => $"Current: {BaseHex}";
 
 	// Canonical base color for the current palette (in MAUI Color form).
 	// This is set only after input has been validated and applied.
@@ -80,7 +61,7 @@ public class CreateViewModel : BaseViewModel
     }
 
 
-	/* ==== INPUT HERE (Name / Hex / HSV / HSL) =============================
+	/* ==== INPUT HERE (Hex / HSV / HSL / Named) =============================
 	*  Mode selection allows the user to choose between HEX and HSV entry styles.
 	*  Once a valid base color has been applied, the mode is locked until
 	*  a new session is triggered (by pressing 'Reset').
@@ -133,6 +114,29 @@ public class CreateViewModel : BaseViewModel
     // Expose whether the Picker should be interactive.
     public bool CanChangeInputMode => !_inputModeLocked;
 	public bool IsInputModeLocked => _inputModeLocked;
+
+
+	/* ==== Hex INPUT (when SelectedInputMode == "Hex") =========
+    *  	HEX string the user types into the input box (the "Canonical" input).
+    *  	This is NOT validated until ApplyInput() is called.
+    */
+	string _baseHex = string.Empty;
+
+	public string BaseHex
+	{
+		get => _baseHex;
+		set
+		{
+			if (SetProperty(ref _baseHex, value, nameof(BaseHex)))
+			{
+				// Keep the preview label up to date as the user types.
+				OnPropertyChanged(nameof(BaseHexPreview));
+			}
+		}
+	}
+
+	// Small text preview that simply echoes the current HEX input.
+	public string BaseHexPreview => $"Current: {BaseHex}";
 
 
 	/* ==== HSV INPUT (when SelectedInputMode == "HSV") =========
@@ -218,7 +222,7 @@ public class CreateViewModel : BaseViewModel
         });
 
 	// Currently selected harmony scheme label. Used to pick the matching HarmonyScheme enum.
-	string _selectedScheme = "Monochromatic"; //Sample Starter Chosen Scheme
+	string _selectedScheme = "Monochromatic"; //Sample Starter Chosen Scheme -- non-nullable field
 
     public string SelectedScheme
     {
@@ -227,27 +231,10 @@ public class CreateViewModel : BaseViewModel
 	}
 
 
-	// ==== GENERATED PALETTE + EXPORT ==========================
+	// ==== GENERATED PALETTE ==========================
 
 	// The current set of generated palette slots. Bound to a UI list of swatches.
 	public ObservableCollection<ColorSlotViewModel> Palette { get; } = new();
-
-	// JSON export string representing the current palette as a list of hex codes.
-	string _exportJson = string.Empty;
-    public string ExportJson
-    {
-        get => _exportJson;
-        private set => SetProperty(ref _exportJson, value, nameof(ExportJson));
-    }
-
-	/* ===SUMMARY===
-    *  Simple 60/30/10 suggestion based on palette size
-    *  These values are exposed so the visualization layer can show a proportional usage hint
-    *  (e.g., primary color ~60%, secondary ~30%, accent ~10%).
-    */
-	public double PrimaryRatio => 0.6;
-    public double SecondaryRatio => 0.3;
-    public double AccentRatio => 0.1;
 
 
 	/* ==== COMMANDS ============================================
@@ -369,66 +356,6 @@ public class CreateViewModel : BaseViewModel
 		ExportJson = string.Empty;
 	}
 
-    void Save()
-    {
-		// Hook point for JSON file save later. For now, just acknowledge the action.
-		// When the persistence layer is implemented, this will write the current palette to disk.
-		InputMessage = "Palette saved (stub - wire to JSON file save/load next).";
-	}
-
-	// Builds a JSON array of hex codes representing the current palette.
-	// The resulting string is bound to a text box for copy‑paste or later file saving.
-	void ExportPaletteJson()
-    {
-		var hexList = Palette
-			.Select(p => ColorMathService.ToHex(p.Color))
-            .ToArray();
-
-        ExportJson = JsonSerializer.Serialize(hexList, new JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
-
-		PaletteMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
-	}
-
-
-	// Resets all user inputs, unlocks input mode, and clears the current palette/export state.
-	void ResetInputs()
-    {
-        ClearInputState();
-
-        _inputModeLocked = false;
-        OnPropertyChanged(nameof(IsInputModeLocked));
-        OnPropertyChanged(nameof(CanChangeInputMode));
-
-        InputMessage = "Inputs reset. Enter a new color to generate a palette.";
-    }
-
-    // Clears all user-editable input fields and palette state,
-    // but doesn't change current selected input mode or lock flags.
-    void ClearInputState()
-    {
-        BaseHex = string.Empty;
-
-        HSV_Hue = 0;
-        HSV_Saturation = 0;
-        HSV_Value = 0;
-
-        HSL_Hue = 0;
-        HSL_Saturation = 0;
-        HSL_Lightness = 0;
-
-        NamedColorName = string.Empty;
-
-        BaseColor = Colors.Transparent;
-        _hasValidBaseColor = false;
-
-        Palette.Clear();
-        ExportJson = string.Empty;
-        PaletteMessage = string.Empty;
-    }
-
 
 	/* === SUMMARY ===
 	*  Validates the current input (HEX / HSV / HSL / Name depending on mode)
@@ -504,6 +431,78 @@ public class CreateViewModel : BaseViewModel
 
         // When input changes, palette message no longer applies.
         PaletteMessage = string.Empty;
+	}
+
+	// Resets all user inputs, unlocks input mode, and clears the current palette/export state.
+	void ResetInputs()
+	{
+		ClearInputState();
+
+		_inputModeLocked = false;
+		OnPropertyChanged(nameof(IsInputModeLocked));
+		OnPropertyChanged(nameof(CanChangeInputMode));
+
+		InputMessage = "Inputs reset. Enter a new color to generate a palette.";
+	}
+
+	// Clears all user-editable input fields and palette state,
+	// but doesn't change current selected input mode or lock flags.
+	void ClearInputState()
+	{
+		BaseHex = string.Empty;
+
+		HSV_Hue = 0;
+		HSV_Saturation = 0;
+		HSV_Value = 0;
+
+		HSL_Hue = 0;
+		HSL_Saturation = 0;
+		HSL_Lightness = 0;
+
+		NamedColorName = string.Empty;
+
+		BaseColor = Colors.Transparent;
+		_hasValidBaseColor = false;
+
+		Palette.Clear();
+		ExportJson = string.Empty;
+		PaletteMessage = string.Empty;
+	}
+
+
+	/* ==== EXPORT ==============================================
+    *  JSON export string representing the current palette as a list of hex codes.
+    *  Stand in for when persistence is properly implemented.
+    */
+
+	void Save()
+	{
+		// Hook point for JSON file save later. For now, just acknowledge the action.
+		// When the persistence layer is implemented, this will write the current palette to disk.
+		InputMessage = "Palette saved (stub - wire to JSON file save/load next).";
+	}
+
+	// Builds a JSON array of hex codes representing the current palette.
+	// The resulting string is bound to a text box for copy‑paste or later file saving.
+	void ExportPaletteJson()
+	{
+		var hexList = Palette
+			.Select(p => ColorMathService.ToHex(p.Color))
+			.ToArray();
+
+		ExportJson = JsonSerializer.Serialize(hexList, new JsonSerializerOptions
+		{
+			WriteIndented = true
+		});
+
+		PaletteMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
+	}
+
+	string _exportJson = string.Empty;
+	public string ExportJson
+	{
+		get => _exportJson;
+		private set => SetProperty(ref _exportJson, value, nameof(ExportJson));
 	}
 }
 

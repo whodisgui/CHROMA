@@ -80,8 +80,8 @@ public class ColorSlotViewModel : ObservableObject
 	/* ===SUMMARY===
     * L ∈ [0,1]. Only this + Saturation are tweakable by user.
     * 
-    * Lightness slider backing field. Changing this recomputes the Color while
-    * keeping the hue fixed.
+    * Lightness slider backing field. Whenever this changes (and is clamped into [0,1]),
+    * UpdateColor() is called to keep the UI swatch in sync.
     */
 	public double Lightness
 	{
