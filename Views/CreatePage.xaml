@@ -191,21 +191,7 @@
 				</VerticalStackLayout>
 			</Border>
 
-			<!-- Section 4: Visualization [placeholder for now] -->
-			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
-				<VerticalStackLayout Spacing="4">
-					<Label Text="Visualization [preview]"
-						   FontAttributes="Bold" />
-					<BoxView HeightRequest="80"
-							 Color="LightGray"
-							 Opacity="0.3" />
-					<Label Text="[MVP visualization of palette distribution will appear here.]"
-						   FontSize="11"
-						   TextColor="Gray" />
-				</VerticalStackLayout>
-			</Border>
-
-			<!-- Section 5: Simple export block [placeholder for now] -->
+			<!-- Section 4: Simple export block [placeholder for now] -->
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
 					<Button Text="Export JSON" Command="{Binding ExportJsonCommand}" />
