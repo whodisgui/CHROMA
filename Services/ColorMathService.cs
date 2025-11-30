@@ -127,9 +127,9 @@ public static class ColorMathService
 		if (hex.StartsWith("#")) { hex = hex[1..]; }
 		if (hex.Length != 6) { return false; }
 
-		if (!int.TryParse(hex[..2], System.Globalization.NumberStyles.HexNumber, null, out var rByte) ||
-		   !int.TryParse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber, null, out var gByte) ||
-		   !int.TryParse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber, null, out var bByte))
+		if (!int.TryParse(hex[..2], System.Globalization.NumberStyles.HexNumber, null, out var rByte) ||            // If parsing Red Byte
+		   !int.TryParse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber, null, out var gByte) ||  // Green Byte
+		   !int.TryParse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber, null, out var bByte))    // or Blue Byte fails
 		{
 			return false;
 		}
@@ -179,7 +179,7 @@ public static class ColorMathService
 
 
 	// Translates a Color to a #RRGGBB hex string (no alpha).
-	// Used for exporting palettes annd for displaying swatches as hex codes.
+	// Used for exporting palettes and for displaying swatches as hex codes.
 	public static string ToHex(Color color)
 	{
 		var r = (int)Math.Round(color.Red * 255);
@@ -334,7 +334,7 @@ public static class ColorMathService
      * Converts HSL to HSV with same hue.
      * 
      * Basically converts an HSL color into HSV while preserving hue,
-     * useful when users switch innput modes.
+     * useful when users switch input modes.
      */
 	public static HSVColor HSLToHSV(HSLColor hsl)
 	{
@@ -389,7 +389,7 @@ public enum HarmonyScheme
 /* ===SUMMARY===
 * Generates complementing colors based on each Color Harmony Scheme
 * 
-* Givenn a base HSL color and a selected scheme, returns the derived HSL palette
+* Given a base HSL color and a selected scheme, returns the derived HSL palette
 * (still in HSL so the UI can later tweak saturation/lightness per slot).
 */
 public static class HarmonyGenerator
