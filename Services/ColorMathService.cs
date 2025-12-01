@@ -368,6 +368,136 @@ public static class ColorMathService
 
 		return new HSLColor(hsv.H, s_l, l);
 	}
+
+
+	// ========== Critique helpers: WCAG contrast & ΔE =====================
+	/* ===SUMMARY===
+	 * These helper functions are meant for CritiqueService.
+	 */
+
+	// converts '#RRGGBB' hex string to normalized RGB (0-1)
+	static (double r, double g, double b) HexToRgb01(string hex)
+	{
+		if (string.IsNullOrWhiteSpace(hex))
+			throw new ArgumentException("Hex color is null or empty.", nameof(hex));
+
+		// Allow optional leading '#'
+		if (hex.StartsWith("#", StringComparison.Ordinal))
+			hex = hex.Substring(1);
+
+		if (hex.Length != 6)
+			throw new ArgumentException("Expected hex in form RRGGBB.", nameof(hex));
+
+		byte r = Convert.ToByte(hex.Substring(0, 2), 16);
+		byte g = Convert.ToByte(hex.Substring(2, 2), 16);
+		byte b = Convert.ToByte(hex.Substring(4, 2), 16);
+
+		return (r / 255.0, g / 255.0, b / 255.0);
+	}
+
+	// computes WCAG relative luminance for sRGB (measuring how bright a color appears to the human eye)
+	static double RelativeLuminance(double r, double g, double b)
+	{
+		double Linear(double c) =>
+			c <= 0.03928
+				? c / 12.92
+				: Math.Pow((c + 0.055) / 1.055, 2.4);
+
+		double R = Linear(r);
+		double G = Linear(g);
+		double B = Linear(b);
+
+		return 0.2126 * R + 0.7152 * G + 0.0722 * B;
+	}
+
+	// finds WCAG contrast ratio between two hex colors (measurement of diff between colors' perceived brightness)
+	public static double GetContrastRatio(string hex1, string hex2)
+	{
+		var (r1, g1, b1) = HexToRgb01(hex1);
+		var (r2, g2, b2) = HexToRgb01(hex2);
+
+		double L1 = RelativeLuminance(r1, g1, b1);
+		double L2 = RelativeLuminance(r2, g2, b2);
+
+		// Ensure L1 is lighter
+		if (L1 < L2)
+		{
+			var tmp = L1;
+			L1 = L2;
+			L2 = tmp;
+		}
+
+		return (L1 + 0.05) / (L2 + 0.05);
+	}
+
+	/* ===SUMMARY===
+	 * Hex -> Lab -> ΔE76
+	 * 
+	 * This converts hex to LAB, as in CIELAB:
+	 * a perceptually uniform color space designed so that
+	 * numerical differences between colors correspond roughly
+	 * to how different those colors appear to human vision.
+	 */
+	public static (double L, double a, double b) HexToLab(string hex)
+	{
+		// Normalizes hex into standard R G B values
+		var (r, g, b) = HexToRgb01(hex);
+
+		// sRGB -> linear
+		double Linear(double c) =>
+			c <= 0.04045
+				? c / 12.92
+				: Math.Pow((c + 0.055) / 1.055, 2.4);
+
+		double R = Linear(r);
+		double G = Linear(g);
+		double B = Linear(b);
+
+		// linear RGB -> XYZ (D65)
+		double X = R * 0.4124 + G * 0.3576 + B * 0.1805;
+		double Y = R * 0.2126 + G * 0.7152 + B * 0.0722;
+		double Z = R * 0.0193 + G * 0.1192 + B * 0.9505;
+
+		// Normalize by reference white (D65)
+		const double Xn = 0.95047;
+		const double Yn = 1.00000;
+		const double Zn = 1.08883;
+
+		double f(double t)
+		{
+			const double delta = 6.0 / 29.0;
+			return t > Math.Pow(delta, 3)
+				? Math.Pow(t, 1.0 / 3.0)
+				: (t / (3 * delta * delta)) + (4.0 / 29.0);
+		}
+
+		double fx = f(X / Xn);
+		double fy = f(Y / Yn);
+		double fz = f(Z / Zn);
+
+		double L = 116 * fy - 16;
+		double a = 500 * (fx - fy);
+		double b2 = 200 * (fy - fz);
+
+		/* Returns a tuple representing the color in CIELAB:
+		 * L = Perceptual lightness (0 = black, 100 ≈ diffuse white)
+		 * A = Green–red axis (negative = green, positive = red)
+		 * B = Blue–yellow axis (negative = blue, positive = yellow)
+		*/
+		return (L, a, b2);
+	}
+
+	public static double DeltaE76(string hex1, string hex2)
+	{
+		var (L1, a1, b1) = HexToLab(hex1);
+		var (L2, a2, b2) = HexToLab(hex2);
+
+		double dL = L1 - L2;
+		double da = a1 - a2;
+		double db = b1 - b2;
+
+		return Math.Sqrt(dL * dL + da * da + db * db);
+	}
 }
 
 
