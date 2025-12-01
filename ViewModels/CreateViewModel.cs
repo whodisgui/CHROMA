@@ -1,15 +1,12 @@
 ﻿using CHROMA.Services;
 using CHROMA.Models;
 using CHROMA.Data;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Runtime.CompilerServices;
-using System.Runtime.Intrinsics.Arm;
 using System.Windows.Input;
 
 namespace CHROMA.ViewModels;
