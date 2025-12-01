@@ -15,7 +15,7 @@ public class Palette
 {
 
 	[PrimaryKey, AutoIncrement]
-	public int PaletteId { get; set; }
+	public int Id { get; set; }
 
 	// Optional user-facing name for this palette
 	[MaxLength(100)]
@@ -29,4 +29,6 @@ public class Palette
 	[NotNull]
 	public string Scheme { get; set; } = string.Empty;
 
+	// UTC timestamp when the palette was saved
+	public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 }

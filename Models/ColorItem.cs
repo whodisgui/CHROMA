@@ -14,7 +14,7 @@ public class ColorItem
 {
 
 	[PrimaryKey, AutoIncrement]
-	public int ColorItemId { get; set; }
+	public int Id { get; set; }
 
 	// Foreign key to the palette it belongs to
 	[Indexed]
@@ -22,18 +22,17 @@ public class ColorItem
 
 	// User-readable label like "Base color" or "Complement"
 	[MaxLength(50)]
-	public string ColorLabel { get; set; } = string.Empty;
+	public string Label { get; set; } = string.Empty;
 
 	// Order within palette (i.e. first or second or etc. ; 0-based)
-	public int ColorOrder { get; set; }
+	public int Order { get; set; }
 
 	// Hex code of color
 	[NotNull]
-	public string ColorHex { get; set; } = string.Empty;
+	public string Hex { get; set; } = string.Empty;
 
 	// HSL values of color; useful for recreation in ViewModels
-	public double ColorHue { get; set; }
-	public double ColorSat { get; set; }
-	public double ColorLight { get; set; }
-
+	public double H { get; set; }
+	public double S { get; set; }
+	public double L { get; set; }
 }

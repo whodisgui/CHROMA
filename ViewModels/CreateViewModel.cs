@@ -1,12 +1,15 @@
 ﻿using CHROMA.Services;
+using CHROMA.Models;
+using CHROMA.Data;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui.Graphics;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Runtime.Intrinsics.Arm;
-using System.Text.Json;
 using System.Windows.Input;
 
 namespace CHROMA.ViewModels;
@@ -20,7 +23,7 @@ namespace CHROMA.ViewModels;
  *   - Let the user pick a harmony scheme (Monochromatic, Complementary, etc.)
  *   - Generate a palette (ObservableCollection<ColorSlotViewModel>) via HarmonyGenerator
  *   - Provide user‑facing messages for validation and palette status
- *   - Offer commands for Apply, Generate, Save (stub), Export JSON, and Reset
+ *   - Offer commands for Apply, Generate, Save (stub), Export to Database, and Reset
  * 
  * This class is the "glue" between the XAML UI and the pure color‑math services.
  */
@@ -245,7 +248,6 @@ public class CreateViewModel : BaseViewModel
 	public ICommand ResetCommand => new Command(ResetInputs);
 	public ICommand GenerateCommand => new Command(GeneratePalette);
 	public ICommand SaveCommand => new Command(Save);
-	public ICommand ExportJsonCommand => new Command(ExportPaletteJson);
 
 
 	/* ==== CORE LOGIC ==========================================
@@ -352,8 +354,6 @@ public class CreateViewModel : BaseViewModel
 		}
 
         PaletteMessage = $"Generated {Palette.Count} colors using {SelectedScheme}.";
-		// Clear any previous export text so the user knows this palette hasn't been exported yet.
-		ExportJson = string.Empty;
 	}
 
 
@@ -465,44 +465,72 @@ public class CreateViewModel : BaseViewModel
 		_hasValidBaseColor = false;
 
 		Palette.Clear();
-		ExportJson = string.Empty;
 		PaletteMessage = string.Empty;
 	}
 
 
-	/* ==== EXPORT ==============================================
-    *  JSON export string representing the current palette as a list of hex codes.
+    /* ==== EXPORT/SAVE ==============================================
+    *  Export/Save the current palette to database.
     *  Stand in for when persistence is properly implemented.
     */
 
-	void Save()
+    readonly ChromaDatabase _database;  // Database declared and initialized by constructor
+	public CreateViewModel()
 	{
-		// Hook point for JSON file save later. For now, just acknowledge the action.
-		// When the persistence layer is implemented, this will write the current palette to disk.
-		InputMessage = "Palette saved (stub - wire to JSON file save/load next).";
+		// Use the global singleton instance instead of DI.
+		_database = ChromaDatabase.Instance;
 	}
 
-	// Builds a JSON array of hex codes representing the current palette.
-	// The resulting string is bound to a text box for copy‑paste or later file saving.
-	void ExportPaletteJson()
+	async void Save()
 	{
-		var hexList = Palette
-			.Select(p => ColorMathService.ToHex(p.Color))
-			.ToArray();
+		// Basic validation: do we have a valid base and at least one generated color?
+		if (!_hasValidBaseColor || Palette.Count == 0)
+        {
+            PaletteMessage = "Generate a palette first before saving.";
+            return;
+        }
 
-		ExportJson = JsonSerializer.Serialize(hexList, new JsonSerializerOptions
-		{
-			WriteIndented = true
-		});
+        try
+        {
+            // Use the current BaseColor to compute a canonical hex string.
+            var baseHex = ColorMathService.ToHex(BaseColor);
 
-		PaletteMessage = "Export JSON prepared. (Copy from the text box or wire to file-save next.)";
-	}
+            // Build the Palette model.
+            var paletteModel = new Palette
+            {
+                Name = $"{SelectedScheme} palette ({baseHex})",
+                BaseHex = baseHex,
+                Scheme = SelectedScheme,
+                CreatedUtc = DateTime.UtcNow
+            };
 
-	string _exportJson = string.Empty;
-	public string ExportJson
-	{
-		get => _exportJson;
-		private set => SetProperty(ref _exportJson, value, nameof(ExportJson));
+            // Build ColorItem rows from the Palette collection.
+            var colors = Palette
+                .Select((slot, index) =>
+                {
+                    var hsl = ColorMathService.ToHSL(slot.Color);
+                    return new ColorItem
+                    {
+                        // PaletteId will be filled in by ChromaDatabase after the palette is inserted.
+                        Label = slot.Label,
+                        Order = index,
+                        Hex = ColorMathService.ToHex(slot.Color),
+                        H = hsl.H,
+                        S = hsl.S,
+                        L = hsl.L
+                    };
+                })
+                .ToList();
+
+            int savedId = await _database.SavePaletteAsync(paletteModel, colors);
+
+            PaletteMessage = $"Palette saved (ID {savedId}).";
+        }
+        catch (Exception ex)
+        {
+			PaletteMessage = "Error saving palette. Check logs for details.";
+			System.Diagnostics.Debug.WriteLine(ex);
+		}
 	}
 }
 

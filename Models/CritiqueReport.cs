@@ -13,16 +13,17 @@ namespace CHROMA.Models;
 public class CritiqueReport
 {
 	[PrimaryKey, AutoIncrement]
-	public int ReportId { get; set; }
+	public int Id { get; set; }
 
 	// Foreign key to the criticized palette
 	[Indexed]
 	public int PaletteId { get; set; }
 
-	public string FeedbackSummary { get; set; } = string.Empty;
-	public string FeedbackSpacing { get; set; } = string.Empty;
-	public string FeedbackContrast { get; set; } = string.Empty;
-	public string FeedbackDeltaE { get; set; } = string.Empty;
-	public string FeedbackBalance { get; set; } = string.Empty;
+	public string Summary { get; set; } = string.Empty;
+	public string HarmonySpacing { get; set; } = string.Empty;
+	public string Contrast { get; set; } = string.Empty;
+	public string DeltaE { get; set; } = string.Empty;
+	public string Balance { get; set; } = string.Empty;
 
+	public DateTime CreatedUtc { get; set; } = DateTime.UtcNow;
 }
