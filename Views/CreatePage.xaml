@@ -195,14 +195,10 @@
 				</VerticalStackLayout>
 			</Border>
 
-			<!-- Section 4: Simple export block [placeholder for now] -->
+			<!-- Section 4: Save + Export block -->
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
-					<Button Text="Export JSON" Command="{Binding ExportJsonCommand}" />
-					<Editor Text="{Binding ExportJson}"
-                            AutoSize="TextChanges"
-                            IsReadOnly="True"
-                            HeightRequest="120" />
+					<Button Text="Save Palette" Command="{Binding SaveCommand}" />
 				</VerticalStackLayout>
 			</Border>
 
