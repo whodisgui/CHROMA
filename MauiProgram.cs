@@ -1,4 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
+using CHROMA.Data;
+using Microsoft.Extensions.DependencyInjection; // for AddSingleton
 
 namespace CHROMA
 {
@@ -14,6 +16,9 @@ namespace CHROMA
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
+
+            // Register the database as a singleton
+            builder.Services.AddSingleton<ChromaDatabase>();
 
 #if DEBUG
     		builder.Logging.AddDebug();

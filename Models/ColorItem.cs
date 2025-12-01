@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace CHROMA.Models;
 
 /* ===SUMMARY===
-*  Single color belonging to a palette (1-to-many)
-*/
+ * Single color belonging to a palette (1-to-many)
+ */
 public class ColorItem
 {
 

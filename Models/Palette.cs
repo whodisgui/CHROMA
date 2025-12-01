@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 namespace CHROMA.Models;
 
 /* ===SUMMARY===
-*  A saved palette generated from CreatePage
-*  persisted to the local SQLite database
-*/
+ * A saved palette generated from CreatePage
+ * persisted to the local SQLite database
+ */
 public class Palette
 {
 

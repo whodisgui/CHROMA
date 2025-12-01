@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 namespace CHROMA.Models;
 
 /* ===SUMMARY===
-*  Persisted critique result for a palette
-*/
+ * Persisted critique result for a palette
+ */
 public class CritiqueReport
 {
 	[PrimaryKey, AutoIncrement]
