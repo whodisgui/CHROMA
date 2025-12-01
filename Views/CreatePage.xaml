@@ -199,6 +199,10 @@
 			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
 				<VerticalStackLayout Spacing="8">
 					<Button Text="Save Palette" Command="{Binding SaveCommand}" />
+					<Editor Text="{Binding PaletteMessage}"
+							AutoSize="TextChanges"
+							IsReadOnly="True"
+							HeightRequest="50" />
 				</VerticalStackLayout>
 			</Border>
 
