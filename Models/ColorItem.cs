@@ -35,4 +35,8 @@ public class ColorItem
 	public double H { get; set; }
 	public double S { get; set; }
 	public double L { get; set; }
+
+	// Opt. usage proportion (0.0-1.0) for critique balance tests.
+	// Will later be populated by Visual tab.
+	public double Proportion { get; set; }
 }
