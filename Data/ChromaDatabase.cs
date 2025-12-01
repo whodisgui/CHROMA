@@ -125,5 +125,30 @@ namespace CHROMA.Data
 
 			return await _connection.DeleteAsync(palette);
 		}
+
+		// ================= CRITIQUE REPORTS =====================
+
+		// Saves a critique report for a palette. Returns the new CritiqueReport Id.
+		public async Task<int> SaveCritiqueReportAsync(CritiqueReport report)
+		{
+			await InitAsync();
+			if (_connection is null)
+				throw new InvalidOperationException("Database not initialized.");
+
+			await _connection.InsertAsync(report);
+			return report.Id;
+		}
+
+		// Returns all critique reports (most recent first).
+		public async Task<List<CritiqueReport>> GetCritiqueReportsAsync()
+		{
+			await InitAsync();
+			if (_connection is null)
+				throw new InvalidOperationException("Database not initialized.");
+
+			return await _connection.Table<CritiqueReport>()
+				.OrderByDescending(r => r.CreatedUtc)
+				.ToListAsync();
+		}
 	}
 }
