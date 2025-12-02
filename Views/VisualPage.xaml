@@ -1,10 +1,136 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:vm="clr-namespace:CHROMA.ViewModels"
+			 x:DataType="vm:VisualViewModel"
              x:Class="CHROMA.Views.VisualPage"
 			 Title="Visual">
 
 	<ScrollView>
+		<VerticalStackLayout Padding="16" Spacing="16">
 
+			<!-- Info Block -->
+			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
+				<VerticalStackLayout Spacing="4">
+					<Label Text="Visualize Palette Usage"
+                           FontAttributes="Bold" />
+					<Label Text="Pick a saved palette, set how much each color should appear, and see simple layout previews."
+                           FontSize="12"
+                           TextColor="#323232" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 1: Palette picker -->
+			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
+				<VerticalStackLayout Spacing="8">
+					<Label Text="Choose a Saved Palette"
+                           FontAttributes="Bold" />
+					<Picker Title="Select palette"
+                            ItemsSource="{Binding SavedPalettes}"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding SelectedPalette}" />
+					<Label Text="{Binding StatusMessage}"
+                           FontSize="11"
+                           TextColor="#323232" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 2: Painter's swatch bar -->
+			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
+				<VerticalStackLayout Spacing="8">
+					<Label Text="Painter's Swatch Bar"
+                           FontAttributes="Bold" />
+					<HorizontalStackLayout BindableLayout.ItemsSource="{Binding Chart.Segments}"
+                                           HeightRequest="40"
+                                           Spacing="0">
+						<BindableLayout.ItemTemplate>
+							<DataTemplate x:DataType="vm:VisualColorSegment">
+								<BoxView Color="{Binding Color}"
+                                         WidthRequest="{Binding BarWidth}"
+                                         HeightRequest="40" />
+							</DataTemplate>
+						</BindableLayout.ItemTemplate>
+					</HorizontalStackLayout>
+					<Label Text="Wider blocks represent colors that should show up more often; thin blocks are accents."
+                           FontSize="11"
+                           TextColor="#323232" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 3: 60 / 30 / 10 layout preview -->
+			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
+				<VerticalStackLayout Spacing="8">
+					<Label Text="60 / 30 / 10 Layout Hint"
+                           FontAttributes="Bold" />
+					<Grid ColumnDefinitions="6*,3*,1*"
+                          HeightRequest="60">
+						<BoxView Grid.Column="0"
+                                 Color="{Binding Chart.PrimarySegment.Color}" />
+						<BoxView Grid.Column="1"
+                                 Color="{Binding Chart.SecondarySegment.Color}" />
+						<BoxView Grid.Column="2"
+                                 Color="{Binding Chart.AccentSegment.Color}" />
+					</Grid>
+					<HorizontalStackLayout Spacing="8">
+						<Label Text="{Binding Chart.PrimarySegment.Label}"
+                               FontSize="11" />
+						<Label Text="{Binding Chart.SecondarySegment.Label}"
+                               FontSize="11" />
+						<Label Text="{Binding Chart.AccentSegment.Label}"
+                               FontSize="11" />
+					</HorizontalStackLayout>
+					<Label Text="Use your primary for backgrounds or big shapes, secondary for large supporting areas, and accents sparingly."
+                           FontSize="11"
+                           TextColor="#323232" />
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 4: Per-color usage controls -->
+			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
+				<VerticalStackLayout Spacing="8">
+					<Label Text="Adjust Usage Per Color"
+                           FontAttributes="Bold" />
+					<CollectionView ItemsSource="{Binding Chart.Segments}">
+						<CollectionView.ItemTemplate>
+							<DataTemplate x:DataType="vm:VisualColorSegment">
+								<Grid ColumnDefinitions="Auto,*,Auto"
+                                      RowDefinitions="Auto,Auto"
+                                      Padding="0,4">
+									<BoxView Grid.RowSpan="2"
+                                             WidthRequest="24"
+                                             HeightRequest="24"
+                                             Margin="0,0,8,0"
+                                             Color="{Binding Color}" />
+									<Label Grid.Column="1"
+                                           Text="{Binding Label}"
+                                           FontAttributes="Bold" />
+									<Label Grid.Column="2"
+                                           Text="{Binding Percent, StringFormat='{0:F0}%'}"
+                                           HorizontalTextAlignment="End" />
+									<Slider Grid.Row="1"
+                                            Grid.Column="0"
+                                            Grid.ColumnSpan="3"
+                                            Minimum="0"
+                                            Maximum="100"
+											ThumbColor="#323232"
+											MinimumTrackColor="#323232"
+                                            Value="{Binding Percent, Mode=TwoWay}" />
+								</Grid>
+							</DataTemplate>
+						</CollectionView.ItemTemplate>
+					</CollectionView>
+
+					<HorizontalStackLayout Spacing="12">
+						<Button Text="Reset to 60 / 30 / 10"
+                                Command="{Binding ResetProportionsCommand}" />
+						<Button Text="Save Usage"
+                                Command="{Binding SaveProportionsCommand}" />
+					</HorizontalStackLayout>
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- A future section can add an 'Export Visualization' button here. -->
+
+		</VerticalStackLayout>
 	</ScrollView>
 </ContentPage>

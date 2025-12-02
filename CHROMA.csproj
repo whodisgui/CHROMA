@@ -60,9 +60,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\Images\tabbedpage_icons\visual_tabbedpage_icon.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <MauiImage Include="Resources\Images\tabbedpage_icons\aboutinfo_tabbedpage_icon.png" />
 	  <MauiImage Include="Resources\Images\tabbedpage_icons\create_tabbedpage_icon.png" />
 	  <MauiImage Include="Resources\Images\tabbedpage_icons\critique_tabbedpage_icon.png" />
+	  <MauiImage Include="Resources\Images\tabbedpage_icons\visual_tabbedpage_icon.png" />
 	</ItemGroup>
 
 	<ItemGroup>
