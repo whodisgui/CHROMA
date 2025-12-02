@@ -90,6 +90,13 @@ public class VisualViewModel : BaseViewModel
 		set => SetProperty(ref _isBusy, value, nameof(IsBusy));
 	}
 
+	private bool _supportsClassic601010;
+	public bool SupportsClassic601010
+	{
+		get => _supportsClassic601010;
+		private set => SetProperty(ref _supportsClassic601010, value, nameof(SupportsClassic601010));
+	}
+
 	private async Task LoadPalettesAsync()
 	{
 		try
@@ -125,6 +132,7 @@ public class VisualViewModel : BaseViewModel
 		if (SelectedPalette == null)
 		{
 			Chart.Clear();
+			SupportsClassic601010 = false;
 			StatusMessage = "Pick a palette to visualize its usage.";
 			return;
 		}
@@ -135,6 +143,8 @@ public class VisualViewModel : BaseViewModel
 
 			var colors = await _database.GetColorsForPaletteAsync(SelectedPalette.Id);
 			Chart.LoadFromColors(colors);
+
+			SupportsClassic601010 = Chart.Segments.Count == 3;
 
 			if (Chart.Segments.Count == 0)
 			{
@@ -162,7 +172,9 @@ public class VisualViewModel : BaseViewModel
 			return;
 
 		Chart.ResetToDefaultProportions();
-		StatusMessage = "Usage reset to a simple 60 / 30 / 10‑style pattern.";
+		StatusMessage = SupportsClassic601010
+			? "Usage reset to classic 60 / 30 / 10 (60% / 30% / 10%) pattern."
+			: "Usage reset to a balanced pattern. 60/30/10 layout works best with 3‑color palettes.";
 	}
 
 	private async Task SaveProportionsAsync()

@@ -92,17 +92,30 @@
 						</CollectionView.ItemTemplate>
 					</CollectionView>
 
-					<HorizontalStackLayout Spacing="12">
-						<Button Text="Reset to 60 / 30 / 10"
+					<HorizontalStackLayout Spacing="12"
+										   HorizontalOptions="End"
+										   Margin="0,12,0,0">
+						<Button Text="Reset Usage"
                                 Command="{Binding ResetProportionsCommand}" />
 						<Button Text="Save Usage"
                                 Command="{Binding SaveProportionsCommand}" />
 					</HorizontalStackLayout>
+
+					<!-- Status / hint text -->
+					<Label Text="{Binding StatusMessage}"
+                           FontSize="11"
+                           TextColor="#323232" />
 				</VerticalStackLayout>
 			</Border>
 
 			<!-- Section 4: 60 / 30 / 10 layout preview -->
-			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
+			<Label Text="Classic 60/30/10 layout works best with three‑color palettes. 
+                         This palette has more colors, so focus on the painter’s bar and sliders."
+                   FontSize="11"
+                   TextColor="#323232"
+                   IsVisible="{Binding SupportsClassic601010, Converter={StaticResource InverseBoolConverter}}" />
+			
+			<Border Padding="12" StrokeThickness="1" Stroke="Gray" IsVisible="{Binding SupportsClassic601010}">
 				<VerticalStackLayout Spacing="8">
 					<Label Text="60 / 30 / 10 Layout Hint"
                            FontAttributes="Bold" />
@@ -123,7 +136,7 @@
 						<Label Text="{Binding Chart.AccentSegment.Label}"
                                FontSize="11" />
 					</HorizontalStackLayout>
-					<Label Text="Use your primary for backgrounds or big shapes, secondary for large supporting areas, and accents sparingly."
+					<Label Text="Use your primary for big areas (≈60%), secondary for supporting areas (≈30%), and accent sparingly (≈10%)."
                            FontSize="11"
                            TextColor="#323232" />
 				</VerticalStackLayout>
