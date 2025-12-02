@@ -57,35 +57,7 @@
 				</VerticalStackLayout>
 			</Border>
 
-			<!-- Section 3: 60 / 30 / 10 layout preview -->
-			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
-				<VerticalStackLayout Spacing="8">
-					<Label Text="60 / 30 / 10 Layout Hint"
-                           FontAttributes="Bold" />
-					<Grid ColumnDefinitions="6*,3*,1*"
-                          HeightRequest="60">
-						<BoxView Grid.Column="0"
-                                 Color="{Binding Chart.PrimarySegment.Color}" />
-						<BoxView Grid.Column="1"
-                                 Color="{Binding Chart.SecondarySegment.Color}" />
-						<BoxView Grid.Column="2"
-                                 Color="{Binding Chart.AccentSegment.Color}" />
-					</Grid>
-					<HorizontalStackLayout Spacing="8">
-						<Label Text="{Binding Chart.PrimarySegment.Label}"
-                               FontSize="11" />
-						<Label Text="{Binding Chart.SecondarySegment.Label}"
-                               FontSize="11" />
-						<Label Text="{Binding Chart.AccentSegment.Label}"
-                               FontSize="11" />
-					</HorizontalStackLayout>
-					<Label Text="Use your primary for backgrounds or big shapes, secondary for large supporting areas, and accents sparingly."
-                           FontSize="11"
-                           TextColor="#323232" />
-				</VerticalStackLayout>
-			</Border>
-
-			<!-- Section 4: Per-color usage controls -->
+			<!-- Section 3: Per-color usage controls -->
 			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
 				<VerticalStackLayout Spacing="8">
 					<Label Text="Adjust Usage Per Color"
@@ -126,6 +98,34 @@
 						<Button Text="Save Usage"
                                 Command="{Binding SaveProportionsCommand}" />
 					</HorizontalStackLayout>
+				</VerticalStackLayout>
+			</Border>
+
+			<!-- Section 4: 60 / 30 / 10 layout preview -->
+			<Border Padding="12" StrokeThickness="1" Stroke="Gray">
+				<VerticalStackLayout Spacing="8">
+					<Label Text="60 / 30 / 10 Layout Hint"
+                           FontAttributes="Bold" />
+					<Grid ColumnDefinitions="6*,3*,1*"
+                          HeightRequest="60">
+						<BoxView Grid.Column="0"
+                                 Color="{Binding Chart.PrimarySegment.Color}" />
+						<BoxView Grid.Column="1"
+                                 Color="{Binding Chart.SecondarySegment.Color}" />
+						<BoxView Grid.Column="2"
+                                 Color="{Binding Chart.AccentSegment.Color}" />
+					</Grid>
+					<HorizontalStackLayout Spacing="8">
+						<Label Text="{Binding Chart.PrimarySegment.Label}"
+                               FontSize="11" />
+						<Label Text="{Binding Chart.SecondarySegment.Label}"
+                               FontSize="11" />
+						<Label Text="{Binding Chart.AccentSegment.Label}"
+                               FontSize="11" />
+					</HorizontalStackLayout>
+					<Label Text="Use your primary for backgrounds or big shapes, secondary for large supporting areas, and accents sparingly."
+                           FontSize="11"
+                           TextColor="#323232" />
 				</VerticalStackLayout>
 			</Border>
 
