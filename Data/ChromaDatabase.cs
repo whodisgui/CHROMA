@@ -126,6 +126,34 @@ namespace CHROMA.Data
 			return await _connection.DeleteAsync(palette);
 		}
 
+		// Updates the ColorItem rows for a given palette.
+		// Used by the Visual tab when the user adjusts usage proportions.
+		public async Task UpdateColorsForPaletteAsync(int paletteId, IList<ColorItem> colors)
+		{
+			await InitAsync();
+			if (_connection is null)
+				throw new InvalidOperationException("Database not initialized.");
+
+			// Simple approach: delete existing colors for this palette and re‑insert
+			// the provided list with their updated Proportion values.
+			var existing = await GetColorsForPaletteAsync(paletteId);
+			foreach (var c in existing)
+			{
+				await _connection.DeleteAsync(c);
+			}
+
+			foreach (var color in colors)
+			{
+				color.PaletteId = paletteId;
+			}
+
+			if (colors.Count > 0)
+			{
+				await _connection.InsertAllAsync(colors);
+			}
+		}
+
+
 		// ================= CRITIQUE REPORTS =====================
 
 		// Saves a critique report for a palette. Returns the new CritiqueReport Id.
