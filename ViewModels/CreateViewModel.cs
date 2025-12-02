@@ -59,7 +59,7 @@ public class CreateViewModel : BaseViewModel
 	public string PaletteMessage
     {
         get => _paletteMessage;
-        private set => SetProperty(ref _paletteMessage, value, nameof(PaletteMessage));
+        set => SetProperty(ref _paletteMessage, value, nameof(PaletteMessage));
     }
 
 

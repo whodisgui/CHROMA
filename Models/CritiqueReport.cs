@@ -79,4 +79,14 @@ public class CritiqueRuleResult
 
 	// Optional structured payload (e.g., list of problem pairs). Not used yet.
 	public object? Payload { get; set; }
+
+	// Rule name for UI
+	public string RuleName => Rule switch
+	{
+		CritiqueRuleType.HarmonySpacing => "Harmony spacing",
+		CritiqueRuleType.Contrast => "Contrast",
+		CritiqueRuleType.Similarity => "Similarity",
+		CritiqueRuleType.Balance601010 => "60/30/10 balance",
+		_ => Rule.ToString()
+	};
 }

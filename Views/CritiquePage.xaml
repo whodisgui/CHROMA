@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
 			 xmlns:vm="clr-namespace:CHROMA.ViewModels"
+			 xmlns:models="clr-namespace:CHROMA.Models"
 			 x:DataType="vm:CritiqueViewModel"
              x:Class="CHROMA.Views.CritiquePage"
 			 Title="Critique">
@@ -13,8 +14,10 @@
 			<Border Padding="12">
 				<VerticalStackLayout Spacing="8">
 					<Label Text="Critique: Choose a Saved Palette"
+						   TextColor="Black"
                            FontAttributes="Bold" />
 					<Label Text="Pick a palette you created on the Create tab, then run the critique tests."
+						   TextColor="Black"
                            FontSize="12" />
 					
 					<!-- Palette Selection -->
@@ -41,50 +44,66 @@
 					<Label Text="Critique Feedback"
                            FontAttributes="Bold" />
 
-					<!-- Overall score + Per-rule results -->
+					<!-- Overall score + Per-rule results (spacing, contrast, similarity, balance) -->
 					<Label Text="{Binding OverallScore, StringFormat='Overall score: {0}/100'}"
-                       FontSize="14" />
-					<CollectionView ItemsSource="{Binding RuleResults}">
+                           FontSize="14" />
+					
+					<CollectionView ItemsSource="{Binding RuleResults}"
+									HeightRequest="180">
 						<CollectionView.ItemTemplate>
-							<DataTemplate>
-								<Grid Padding="4">
-									<Grid.ColumnDefinitions>
-										<ColumnDefinition Width="2*" />
-										<ColumnDefinition Width="*" />
-									</Grid.ColumnDefinitions>
+							<DataTemplate x:DataType="models:CritiqueRuleResult">
+								<VerticalStackLayout Spacing="2" Margin="0,4,0,4">
+									<!-- Rule name heading -->
+									<Label Text="{Binding RuleName}"
+                                           FontAttributes="Bold"
+                                           FontSize="13" />
 
-									<Label Text="{Binding Message}"
-                                       Grid.Column="0" />
+									<!-- Message + score row -->
+									<Grid Padding="2">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="2*" />
+											<ColumnDefinition Width="*" />
+										</Grid.ColumnDefinitions>
 
-									<Label Text="{Binding Score, StringFormat='Score: {0}'}"
-                                       Grid.Column="1"
-                                       HorizontalTextAlignment="End" />
-								</Grid>
+										<!-- Short message -->
+										<Label Text="{Binding Message}"
+                                               Grid.Column="0" />
+
+										<!-- Score -->
+										<Label Text="{Binding Score, StringFormat='Score: {0}'}"
+                                               Grid.Column="1"
+                                               HorizontalTextAlignment="End" />
+									</Grid>
+								</VerticalStackLayout>
 							</DataTemplate>
 						</CollectionView.ItemTemplate>
 					</CollectionView>
-					<Label Text="Previous critiques"
-                       FontAttributes="Bold"
-                       Margin="0,12,0,0" />
+
+					<Label Text="{Binding History.Count, StringFormat='Previous critiques ({0})'}"
+                           FontAttributes="Bold"
+                           Margin="0,12,0,0" />
 
 					<!-- Simple history: show palette name + summary -->
 					<CollectionView ItemsSource="{Binding History}"
-                                HeightRequest="150">
+                                    HeightRequest="150">
 						<CollectionView.ItemTemplate>
-							<DataTemplate>
+							<DataTemplate x:DataType="models:CritiqueReport">
 								<Grid Padding="4">
 									<Grid.RowDefinitions>
 										<RowDefinition Height="Auto" />
 										<RowDefinition Height="Auto" />
 									</Grid.RowDefinitions>
 
+									<!-- Palette name -->
 									<Label Text="{Binding PaletteName}"
-                                       FontAttributes="Bold" />
+										   TextColor="Black"
+                                           FontAttributes="Bold" />
 
+									<!-- Short summary -->
 									<Label Text="{Binding Summary}"
-                                       FontSize="12"
-                                       TextColor="Gray"
-                                       Grid.Row="1" />
+                                           FontSize="12"
+                                           TextColor="#323232"
+                                           Grid.Row="1" />
 								</Grid>
 							</DataTemplate>
 						</CollectionView.ItemTemplate>

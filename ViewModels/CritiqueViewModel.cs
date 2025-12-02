@@ -146,11 +146,18 @@ public class CritiqueViewModel : BaseViewModel
 		try
 		{
 			IsBusy = true;
+
+			// Clear current critique feedback when refreshing palettes.
+			CurrentReport = null;
+			StatusMessage = string.Empty;
+
 			SavedPalettes.Clear();
 
 			var palettes = await _database.GetPalettesAsync();
 			foreach (var p in palettes)
+			{
 				SavedPalettes.Add(p);
+			}
 
 			StatusMessage = SavedPalettes.Count == 0
 				? "No saved palettes yet. Create one on the Create tab first."
