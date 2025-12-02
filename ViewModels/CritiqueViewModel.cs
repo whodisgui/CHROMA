@@ -14,46 +14,57 @@ namespace CHROMA.ViewModels;
  * Main view‑model for the "Critique" tab/page in CHROMA.
  * 
  * Responsibilities:
- *   - Shows list of saved palettes from the database
- *   - Lets the user pick one and run critique
- *   - Shows current critique (overall score + per-rule results)
- *   - Shows simple history of past critiques
+ *   - Shows list of saved palettes from the local SQLite database (ChromaDatabase)
+ *   - Loads them and lets the user pick one and run critique
+ *   - Run the CritiqueService over that palette (harmony spacing, contrast,
+ *     similarity, and 60/30/10 balance)
+ *   - Expose the current CritiqueReport to the UI (overall score + per-rule
+ *     messages)
+ *   - Maintain a simple history list of past critiques
+ *   
+ * This class is the "glue" between CritiquePage.xaml and the domain layer
+ * (CritiqueService + ChromaDatabase). It contains no UI or platform-specific
+ * code; everything is expressed as properties and commands for XAML bindings.
  */
 
 public class CritiqueViewModel : BaseViewModel
 {
-	private readonly ChromaDatabase _database;
-	private readonly CritiqueService _critiqueService;
+	// ==== DEPENDENCIES ==========================================
+	private readonly ChromaDatabase _database;			// persistence for palettes and critique reports
+	private readonly CritiqueService _critiqueService;  // pure logic for the 4 critique tests
 
 	public CritiqueViewModel()
 	{
 		_database = ChromaDatabase.Instance;
 		_critiqueService = new CritiqueService();
 
+		// Commands are exposed to XAML; they delegate to private async methods.
 		LoadPalettesCommand = new Command(async () => await LoadPalettesAsync());
 		LoadHistoryCommand = new Command(async () => await LoadHistoryAsync());
-		RunCritiqueCommand = new Command(
-			async () => await RunCritiqueAsync(),
-			() => SelectedPalette != null && !IsBusy);
+		RunCritiqueCommand = new Command(async () => await RunCritiqueAsync(),
+			                             () => SelectedPalette != null && !IsBusy);
 
-		// Initial load
+		// Initial data load when the page first appears
 		_ = LoadPalettesAsync();
 		_ = LoadHistoryAsync();
 	}
 
 
 	/* ==== INPUT HERE ==========================================
-     * Select a palette currently saved on the database.
+     * Palette selection section
+     * The user chooses which saved palette to critique
     */
 
 	public ObservableCollection<Palette> SavedPalettes { get; } = new();
 
+	// Currently selected palette (may be null if nothing is chosen yet)
 	private Palette? _selectedPalette;
 	public Palette? SelectedPalette
 	{
 		get => _selectedPalette;
 		set
 		{
+			// Notify bindings and re-evaluate whether RunCritique can execute
 			if (SetProperty(ref _selectedPalette, value, nameof(SelectedPalette)))
 			{
 				((Command)RunCritiqueCommand).ChangeCanExecute();
@@ -69,6 +80,7 @@ public class CritiqueViewModel : BaseViewModel
 		set => SetProperty(ref _statusMessage, value, nameof(StatusMessage));
 	}
 
+	// Simple busy flag so the UI can disable buttons/spinners while work is running
 	private bool _isBusy;
 	public bool IsBusy
 	{
@@ -84,9 +96,10 @@ public class CritiqueViewModel : BaseViewModel
 
 
 	/* ==== CRITIQUE/FEEDBACK SECTION ===========================
-     * Runs CritiqueService based on inputted palette
+     * Holds the most recent CritiqueReport and displays a history list
      */
 
+	// Most recent critique result for the currently selected palette
 	private CritiqueReport? _currentReport;
 	public CritiqueReport? CurrentReport
 	{
@@ -95,14 +108,17 @@ public class CritiqueViewModel : BaseViewModel
 		{
 			if (SetProperty(ref _currentReport, value, nameof(CurrentReport)))
 			{
+				// OverallScore and RuleResults are derived from CurrentReport
 				OnPropertyChanged(nameof(OverallScore));
 				OnPropertyChanged(nameof(RuleResults));
 			}
 		}
 	}
 
+	// Convenience property: numeric 0–100 overall score
 	public int OverallScore => CurrentReport?.OverallScore ?? 0;
 
+	// Convenience property: per-rule results for the current report
 	public IReadOnlyList<CritiqueRuleResult> RuleResults =>
 	    CurrentReport?.RuleResults ?? new List<CritiqueRuleResult>();
 
@@ -119,8 +135,12 @@ public class CritiqueViewModel : BaseViewModel
 
 	/* ==== CORE LOGIC ==========================================
      * Implementation of the commands' behaviors.
+     * Private async helpers that implement the behavior of the commands.
+     * These methods call into ChromaDatabase and CritiqueService
+     * and then update the bound properties above.
     */
 
+	// (Re)loads SavedPalettes from the database.
 	async Task LoadPalettesAsync()
 	{
 		try
@@ -147,6 +167,7 @@ public class CritiqueViewModel : BaseViewModel
 		}
 	}
 
+	// Reloads critique history from the database.
 	async Task LoadHistoryAsync()
 	{
 		try
@@ -169,6 +190,7 @@ public class CritiqueViewModel : BaseViewModel
 		}
 	}
 
+	// Runs the four critique tests on the currently selected palette and saves the result.
 	async Task RunCritiqueAsync()
 	{
 		if (SelectedPalette == null)

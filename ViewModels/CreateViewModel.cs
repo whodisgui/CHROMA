@@ -23,6 +23,8 @@ namespace CHROMA.ViewModels;
  *   - Offer commands for Apply, Generate, Save (stub), Export to Database, and Reset
  * 
  * This class is the "glue" between the XAML UI and the pure color‑math services.
+ * It contains no UI or platform-specific code; everything is expressed as
+ * properties and commands for XAML bindings.
  */
 
 
