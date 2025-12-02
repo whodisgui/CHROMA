@@ -26,10 +26,10 @@
 		</NavigationPage>
 
 		<NavigationPage
-			IconImageSource="tabbedpage_icons/aboutinfo_tabbedpage_icon.png"
-			Title="About">
+			IconImageSource="tabbedpage_icons/visual_tabbedpage_icon.png"
+			Title="Visual">
 			<x:Arguments>
-				<ui:AboutPage/>
+				<ui:VisualPage/>
 			</x:Arguments>
 		</NavigationPage>
 

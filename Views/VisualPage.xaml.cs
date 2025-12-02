@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace CHROMA.Views;
 
-public partial class AboutPage : ContentPage
+public partial class VisualPage : ContentPage
 {
-	public AboutPage()
+	public VisualPage()
 	{
 		InitializeComponent();
 	}
