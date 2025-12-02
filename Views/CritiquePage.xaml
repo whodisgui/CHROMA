@@ -1,47 +1,95 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+			 xmlns:vm="clr-namespace:CHROMA.ViewModels"
+			 x:DataType="vm:CritiqueViewModel"
              x:Class="CHROMA.Views.CritiquePage"
 			 Title="Critique">
-	
-	<!-- INCLUDE THIS BETWEEN CLASS AND TITLE
-	         x:DataType="vm:CritiqueViewModel"
-             xmlns:vm="clr-namespace:CHROMA.ViewModels"	
-	-->
 
 	<ScrollView>
 		<VerticalStackLayout Padding="16" Spacing="16">
 
-			<!-- Section 1: Palette Input -->
+			<!-- Section 1: Palette Input/Select -->
 			<Border Padding="12">
 				<VerticalStackLayout Spacing="8">
-					<Label Text="Palette Input" FontAttributes="Bold"/>
-					<Editor Placeholder="#E96841, #41C2E9, #..." AutoSize="TextChanges" Text="{Binding PaletteText}" />
-					<HorizontalStackLayout>
-						<Button Text="Import .txt" Command="{Binding ImportCommand}"/>
-						<Button Text="Run Critique" Command="{Binding RunCritiqueCommand}"/>
+					<Label Text="Critique: Choose a Saved Palette"
+                           FontAttributes="Bold" />
+					<Label Text="Pick a palette you created on the Create tab, then run the critique tests."
+                           FontSize="12" />
+					
+					<!-- Palette Selection -->
+					<Picker Title="Select existing palette"
+                            ItemsSource="{Binding SavedPalettes}"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding SelectedPalette}" />
+					
+					<HorizontalStackLayout  Spacing="8">
+						<Button Text="Refresh"
+                                Command="{Binding LoadPalettesCommand}" />
+						<Button Text="Run Critique"
+                                Command="{Binding RunCritiqueCommand}" />
 					</HorizontalStackLayout>
+					<Label Text="{Binding StatusMessage}"
+                       FontSize="12"
+                       TextColor="Gray" />
 				</VerticalStackLayout>
 			</Border>
 
 			<!-- Section 2: Feedback -->
 			<Border Padding="12">
 				<VerticalStackLayout Spacing="4">
-					<Label Text="Feedback" FontAttributes="Bold"/>
-					<Label Text="{Binding Report.Summary}" />
-					<Label Text="Harmony Spacing" FontAttributes="Bold" />
-					<Label Text="{Binding Report.HarmonySpacing}" />
-					<Label Text="Contrast (WCAG)" FontAttributes="Bold" />
-					<Label Text="{Binding Report.Contrast}" />
-					<Label Text="Similarity (ΔE)" FontAttributes="Bold" />
-					<Label Text="{Binding Report.DeltaE}" />
-					<Label Text="Balance (60/30/10)" FontAttributes="Bold" />
-					<Label Text="{Binding Report.Balance}" />
-					<Label Text="Disclaimer: This critique reflects theoretical harmony rules only." FontSize="12" TextColor="Gray"/>
-					<HorizontalStackLayout>
-						<Button Text="Save" Command="{Binding SaveCommand}"/>
-						<Button Text="Export" Command="{Binding ExportCommand}"/>
-					</HorizontalStackLayout>
+					<Label Text="Critique Feedback"
+                           FontAttributes="Bold" />
+
+					<!-- Overall score + Per-rule results -->
+					<Label Text="{Binding OverallScore, StringFormat='Overall score: {0}/100'}"
+                       FontSize="14" />
+					<CollectionView ItemsSource="{Binding RuleResults}">
+						<CollectionView.ItemTemplate>
+							<DataTemplate>
+								<Grid Padding="4">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="2*" />
+										<ColumnDefinition Width="*" />
+									</Grid.ColumnDefinitions>
+
+									<Label Text="{Binding Message}"
+                                       Grid.Column="0" />
+
+									<Label Text="{Binding Score, StringFormat='Score: {0}'}"
+                                       Grid.Column="1"
+                                       HorizontalTextAlignment="End" />
+								</Grid>
+							</DataTemplate>
+						</CollectionView.ItemTemplate>
+					</CollectionView>
+					<Label Text="Previous critiques"
+                       FontAttributes="Bold"
+                       Margin="0,12,0,0" />
+
+					<!-- Simple history: show palette name + summary -->
+					<CollectionView ItemsSource="{Binding History}"
+                                HeightRequest="150">
+						<CollectionView.ItemTemplate>
+							<DataTemplate>
+								<Grid Padding="4">
+									<Grid.RowDefinitions>
+										<RowDefinition Height="Auto" />
+										<RowDefinition Height="Auto" />
+									</Grid.RowDefinitions>
+
+									<Label Text="{Binding PaletteName}"
+                                       FontAttributes="Bold" />
+
+									<Label Text="{Binding Summary}"
+                                       FontSize="12"
+                                       TextColor="Gray"
+                                       Grid.Row="1" />
+								</Grid>
+							</DataTemplate>
+						</CollectionView.ItemTemplate>
+					</CollectionView>
+
 				</VerticalStackLayout>
 			</Border>
 
