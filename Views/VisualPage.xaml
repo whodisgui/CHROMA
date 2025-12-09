@@ -113,7 +113,7 @@
                          This palette has more colors, so focus on the painter’s bar and sliders."
                    FontSize="11"
                    TextColor="#323232"
-                   IsVisible="{Binding SupportsClassic601010, Converter={StaticResource InverseBoolConverter}}" />
+                   IsVisible="{Binding SupportsClassic601010}" />
 			
 			<Border Padding="12" StrokeThickness="1" Stroke="Gray" IsVisible="{Binding SupportsClassic601010}">
 				<VerticalStackLayout Spacing="8">
