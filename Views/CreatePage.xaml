@@ -25,7 +25,7 @@
                            HorizontalTextAlignment="Center">
                         <Label.FormattedText>
                             <FormattedString>
-                                <Span Text="&#10;In this current section of Chroma you can " />
+                                <Span Text="&#10;In this current section of Chroma, you can " />
                                 <Span Text="create"
                                       FontAttributes="Bold" />
                                 <Span Text=" color palettes based on those schemes with a color of your choice." />

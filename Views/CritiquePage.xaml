@@ -10,17 +10,39 @@
 	<ScrollView>
 		<VerticalStackLayout Padding="16" Spacing="16">
 
-			<!-- Section 1: Palette Input/Select -->
+            <Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+                <VerticalStackLayout Spacing="8">
+                    <Label FontSize="18"
+                           HorizontalTextAlignment="Center">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="In this current section of Chroma, you can receive a " />
+                                <Span Text="critique"
+                                      FontAttributes="Bold" />
+                                <Span Text=" on the color palette(s) you have submitted by putting it through 4 tests on Spacing, Contrast, Similarity, and Balance.&#10;" />
+
+                                <Span Text="&#10;This section is optional for you!"
+                                      FontAttributes="Bold"/>
+                                <Span Text="&#10;While art is ultimately subjective to those who view it and those who make it, " />
+                                <Span Text="there is no exact right or wrong way to apply your colors and/or style." />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+                <!-- Section 1: Palette Input/Select -->
 			<Border Padding="12">
 				<VerticalStackLayout Spacing="8">
 					<Label Text="Critique: Choose a Saved Palette"
 						   TextColor="Black"
-                           FontAttributes="Bold" />
+                           FontAttributes="Bold"
+                           TextDecorations="Underline" />
 					<Label Text="Pick a palette you created on the Create tab, then run the critique tests."
-						   TextColor="Black"
-                           FontSize="12" />
-					
-					<!-- Palette Selection -->
+						   TextColor="Black" />
+                    <Label Text="You may have to press &quot;Refresh&quot; for the palette to show up. Once selected, press &quot;Run Critique&quot;." />
+
+                    <!-- Palette Selection -->
 					<Picker Title="Select existing palette"
                             ItemsSource="{Binding SavedPalettes}"
                             ItemDisplayBinding="{Binding Name}"
@@ -38,13 +60,47 @@
 				</VerticalStackLayout>
 			</Border>
 
+            <Border Padding="12">
+                <VerticalStackLayout Spacing="4">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Upon running a critique on your selected palette, it will put it through 4 different tests:&#10;" />
+
+                                <Span Text="&#10; 1) Harmony Spacing: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Checks whether your palette’s hue positions match the expected spacing pattern of the chosen harmony scheme." />
+
+
+                                <Span Text="&#10;&#10; 2) Contrast: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Measures text/background readability by evaluating color-pair luminance contrast using WCAG rules (Web Content Accessibiliy Guidelines)." />
+
+                                <Span Text="&#10;&#10; 3) Similarity: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Detects whether any palette colors are too visually close or whether the set maintains clear, usable variety." />
+
+                                <Span Text="&#10;&#10; 4) Balance: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Evaluates how well the palette’s proportions follow a simple design hierarchy (like a 60/30/10 distribution)." />
+
+                                <Span Text="&#10;&#10;Just to reiterate, despite these tests being made on some objective rules, they may or may not apply to your current artwork."
+                                      FontAttributes="Bold"/>
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
 			<!-- Section 2: Feedback -->
 			<Border Padding="12">
 				<VerticalStackLayout Spacing="4">
-					<Label Text="Critique Feedback"
-                           FontAttributes="Bold" />
+                    <Label Text="Critique Feedback:"
+                           FontAttributes="Bold"
+                           TextDecorations="Underline"
+                           FontSize="18"/>
 
-					<!-- Overall score + Per-rule results (spacing, contrast, similarity, balance) -->
+                    <!-- Overall score + Per-rule results (spacing, contrast, similarity, balance) -->
 					<Label Text="{Binding OverallScore, StringFormat='Overall score: {0}/100'}"
                            FontSize="14" />
 					
@@ -84,9 +140,13 @@
                            Margin="0,12,0,0" />
 
 					<!-- Simple history: show palette name + summary -->
-					<CollectionView ItemsSource="{Binding History}"
+                    <Label Text="This section shows a brief history of previous critique reports made.&#10;"
+                           TextDecorations="Underline"
+                           FontAttributes="Bold"/>
+                    <CollectionView ItemsSource="{Binding History}"
                                     HeightRequest="150">
-						<CollectionView.ItemTemplate>
+
+                        <CollectionView.ItemTemplate>
 							<DataTemplate x:DataType="models:CritiqueReport">
 								<Grid Padding="4">
 									<Grid.RowDefinitions>
