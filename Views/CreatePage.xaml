@@ -6,206 +6,297 @@
 			 x:Class="CHROMA.Views.CreatePage"
 			 Title="Create">
 
-	<ScrollView>
-		<VerticalStackLayout Padding="16" Spacing="16">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
 
-			<!-- Section 1: Color Input + Input Mode (HEX or HSV) -->
-			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
-				<VerticalStackLayout Spacing="8">
-					<Label Text="Select a Base Color"
+            <Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Welcome to Chroma! 🎨"
+                           FontAttributes="Bold, Italic"
+                           TextDecorations="Underline"
+                           FontSize="29"
+                           HorizontalTextAlignment="Center"/>
+                    <Label Text="This app is meant to help you with your concurrent understanding of Color Theory and its associative, harmonious color schemes."
+                           FontAttributes="Italic, Bold"
+                           FontSize="18"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="It is suggested that you use this app in conjunction with the artwork you are currently focusing on." />
+                    <Label FontSize="18"
+                           HorizontalTextAlignment="Center">
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="&#10;In this current section of Chroma you can " />
+                                <Span Text="create"
+                                      FontAttributes="Bold" />
+                                <Span Text=" color palettes based on those schemes with a color of your choice." />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+                </VerticalStackLayout>
+            </Border>
+
+
+            <!-- Section 1: Color Input + Input Mode (HEX or HSV) -->
+            <Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="To get started, insert a Base Color of your choice. You can enter the name of one, the HEX code of one (if you know it), or the HSL/HSV values of one."/>
+
+                    <Label Text="&#10;Insert Base Color"
 							   FontAttributes="Bold"
 							   FontSize="16"/>
 
-						<!-- Input mode picker -->
-					<HorizontalStackLayout Spacing="8">
-						<Label Text="Mode:" VerticalOptions="Center" />
-						<Picker ItemsSource="{Binding InputModes}"
+                    <!-- Input mode picker -->
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="Select Mode:" VerticalOptions="Center" />
+                        <Picker ItemsSource="{Binding InputModes}"
 								SelectedItem="{Binding SelectedInputMode}"
 								IsEnabled="{Binding CanChangeInputMode}"
 								WidthRequest="100" />
-					</HorizontalStackLayout>
-					
-					<!-- Named color input block -->
-					<VerticalStackLayout Spacing="4"
+                    </HorizontalStackLayout>
+
+                    <!-- Named color input block -->
+                    <VerticalStackLayout Spacing="4"
 										 IsVisible="{Binding IsNamedMode}">
-						<Label Text="Color Name" />
-						<Entry Text="{Binding NamedColorName}"
+                        <Label Text="Color Name:" />
+                        <Entry Text="{Binding NamedColorName}"
 							   Placeholder="e.g., Red, Indigo, CornflowerBlue" />
-					</VerticalStackLayout>
-					
-					<!-- HEX input block -->
-					<VerticalStackLayout Spacing="4"
+                    </VerticalStackLayout>
+
+                    <!-- HEX input block -->
+                    <VerticalStackLayout Spacing="4"
 										 IsVisible="{Binding IsHexMode}">
-						<Grid ColumnDefinitions="*,*"
+                        <Grid ColumnDefinitions="*,*"
 							  ColumnSpacing="12">
-							<VerticalStackLayout Grid.Column="0">
-								<Label Text="Hex Input:" />
-								<Label Text="HEX code format: #RRGGBB"
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Hex Input:" />
+                                <Label Text="HEX code format: #RRGGBB"
 									   FontSize="11"
 									   TextColor="Gray" />
-							</VerticalStackLayout>
-							<VerticalStackLayout Grid.Column="1">
-								<Entry Text="{Binding BaseHex}" />
-							</VerticalStackLayout>
-						</Grid>
-					</VerticalStackLayout>
-					
-					<!-- HSV input block -->
-					<VerticalStackLayout Spacing="4"
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Entry Text="{Binding BaseHex}" />
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- HSV input block -->
+                    <VerticalStackLayout Spacing="4"
 										 IsVisible="{Binding IsHSVMode}">
-						<Label Text="HSV input" />
-						<Grid ColumnDefinitions="*,*,*"
+                        <Label Text="HSV input:" />
+                        <Grid ColumnDefinitions="*,*,*"
 							  ColumnSpacing="8">
-							<VerticalStackLayout Grid.Column="0">
-								<Label Text="Hue (0–360°)" FontSize="11" />
-								<Entry Text="{Binding HSV_Hue}"
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Hue (0–360°)" FontSize="11" />
+                                <Entry Text="{Binding HSV_Hue}"
 									   Keyboard="Numeric"
 									   Placeholder="30" />
-							</VerticalStackLayout>
-							<VerticalStackLayout Grid.Column="1">
-								<Label Text="Sat (0–100%)" FontSize="11" />
-								<Entry Text="{Binding HSV_Saturation}"
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Sat (0–100%)" FontSize="11" />
+                                <Entry Text="{Binding HSV_Saturation}"
 									   Keyboard="Numeric"
 									   Placeholder="70" />
-							</VerticalStackLayout>
-							<VerticalStackLayout Grid.Column="2">
-								<Label Text="Val (0–100%)" FontSize="11" />
-								<Entry Text="{Binding HSV_Value}"
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="2">
+                                <Label Text="Val (0–100%)" FontSize="11" />
+                                <Entry Text="{Binding HSV_Value}"
 									   Keyboard="Numeric"
 									   Placeholder="90" />
-							</VerticalStackLayout>
-						</Grid>
-					</VerticalStackLayout>
-					
-					<!-- HSL input block -->
-					<VerticalStackLayout Spacing="4"
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <!-- HSL input block -->
+                    <VerticalStackLayout Spacing="4"
 										 IsVisible="{Binding IsHSLMode}">
-						<Label Text="HSL input" />
-						<Grid ColumnDefinitions="*,*,*"
+                        <Label Text="HSL input:" />
+                        <Grid ColumnDefinitions="*,*,*"
 							  ColumnSpacing="8">
-							<VerticalStackLayout Grid.Column="0">
-								<Label Text="Hue (0–360°)" FontSize="11" />
-								<Entry Text="{Binding HSL_Hue}"
+                            <VerticalStackLayout Grid.Column="0">
+                                <Label Text="Hue (0–360°)" FontSize="11" />
+                                <Entry Text="{Binding HSL_Hue}"
 									   Keyboard="Numeric"
 									   Placeholder="210" />
-							</VerticalStackLayout>
-							<VerticalStackLayout Grid.Column="1">
-								<Label Text="Sat (0–100%)" FontSize="11" />
-								<Entry Text="{Binding HSL_Saturation}"
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="Sat (0–100%)" FontSize="11" />
+                                <Entry Text="{Binding HSL_Saturation}"
                                        Keyboard="Numeric"
                                        Placeholder="50" />
-							</VerticalStackLayout>
-							<VerticalStackLayout Grid.Column="2">
-								<Label Text="Light (0–100%)" FontSize="11" />
-								<Entry Text="{Binding HSL_Lightness}"
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="2">
+                                <Label Text="Light (0–100%)" FontSize="11" />
+                                <Entry Text="{Binding HSL_Lightness}"
                                        Keyboard="Numeric"
                                        Placeholder="50" />
-							</VerticalStackLayout>
-						</Grid>
-					</VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </VerticalStackLayout>
 
-					<!-- Base color preview + status -->
-					<HorizontalStackLayout Spacing="25"
+                    <!-- Base color preview + status -->
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="After insterting your desired base color, you can press" />
+                                <Span Text=' "Enter" ' />
+                                <Span Text="to save it (or &quot;lock it in&quot;). " />
+                                <Span Text="The color preview block below will update and you can see your selected color." />
+
+                                <Span Text="&#10;&#10;If you are unsatisfied with the color you've chosen, press" />
+                                <Span Text=' "Reset" ' />
+                                <Span Text="to go back and insert your new one. Otherwise, feel free to proceed." />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <HorizontalStackLayout Spacing="25"
 										   Margin="200,8,0,0">
-						<Button Text="Enter"
+                        <Button Text="Enter"
 								Command="{Binding ApplyInputCommand}"
 								HorizontalOptions="Start" />
-						<Button Text="Reset"
+                        <Button Text="Reset"
 								Command="{Binding ResetCommand}"
 								HorizontalOptions="End" />
-					</HorizontalStackLayout>
-					<Label Text="Base Color Preview" FontAttributes="Bold" Margin="0,8,0,0" />
-					<BoxView HeightRequest="40" Color="{Binding BaseColor}" />
-					<Label Text="{Binding InputMessage}"
+                    </HorizontalStackLayout>
+                    <Label Text="Base Color Preview" FontAttributes="Bold" Margin="0,8,0,0" TextDecorations="Underline" />
+                    <BoxView HeightRequest="40" Color="{Binding BaseColor}" />
+                    <Label Text="{Binding InputMessage}"
 						   FontSize="11"
 						   TextColor="DarkRed" />
-				</VerticalStackLayout>
-			</Border>
+                </VerticalStackLayout>
+            </Border>
 
-			<!-- Section 2: Harmony Selection & Swatch Results -->
-			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
-				<VerticalStackLayout Spacing="8">
-					<Label Text="Harmony Scheme" FontAttributes="Bold"/>
-					
-					<Picker ItemsSource="{Binding Schemes}"
+            <!-- Section 2: Harmony Selection & Swatch Results -->
+            <Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+                <VerticalStackLayout Spacing="8">
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="With the desired base color you chose, you may now generate a palette with it using the 6 well-known harmony schemes:"/>
+                                <Span Text="&#10; 1) Monochromatic: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Base Color + 2 variations with different Saturation and Luminosity." />
+                                <Span Text="&#10;&#10; 2) Complementary: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Base Color + 1 color directly opposite from Color Wheel position." />
+                                <Span Text="&#10;&#10; 3) Split-Complementary: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Base Color + 2 colors adjacent to original complement." />
+                                <Span Text="&#10;&#10; 4) Analogous: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Base Color + 2 colors adjacent to base one." />
+                                <Span Text="&#10;&#10; 5) Triadic: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Base Color + 2 colors evenly spaced 120° apart on the color wheel." />
+                                <Span Text="&#10;&#10; 6) Tetradic: " 
+                                      FontAttributes="Bold"/>
+                                <Span Text="Base Color + 3 colors that form a rectangle on the color wheel." />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <Label Text="&#10;Select Harmony Scheme:" FontAttributes="Bold" FontSize="18" TextDecorations="Underline"/>
+
+                    <Picker ItemsSource="{Binding Schemes}"
 							SelectedItem="{Binding SelectedScheme}" />
 
-					<Button Text="Generate Palette"
+                    <Button Text="Generate Palette"
 							Command="{Binding GenerateCommand}"
 							Margin="0,8,0,0" />
 
-					<Label Text="{Binding PaletteMessage}"
+                    <Label Text="{Binding PaletteMessage}"
 						   FontSize="11"
 						   TextColor="DarkRed" />
 
-					<!-- Swatch Display (Border + Grid Combo) -->
-					<CollectionView ItemsSource="{Binding Palette}"
+                    <Label Text="This is where the colors on your color palette appear and how they currently look:"
+                           FontAttributes="Bold"
+                           FontSize="16"/>
+
+                    <!-- Swatch Display (Border + Grid Combo) -->
+                    <CollectionView ItemsSource="{Binding Palette}"
 									Margin="0,12,0,0">
-					    <CollectionView.ItemsLayout>
-						    <LinearItemsLayout Orientation="Horizontal"
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal"
                                                ItemSpacing="8" />
-						</CollectionView.ItemsLayout>
-						<CollectionView.ItemTemplate>
-							<DataTemplate x:DataType="vm:ColorSlotViewModel">
-								<VerticalStackLayout WidthRequest="100"
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ColorSlotViewModel">
+                                <VerticalStackLayout WidthRequest="100"
                                                      Margin="0,0,8,0">
-									<Border Stroke="Gray"
+                                    <Border Stroke="Gray"
                                             StrokeThickness="1"
                                             Padding="0">
-										<BoxView HeightRequest="60"
+                                        <BoxView HeightRequest="60"
                                                  Color="{Binding Color}" />
-									</Border>
-									<Label Text="{Binding Label}"
+                                    </Border>
+                                    <Label Text="{Binding Label}"
                                            HorizontalTextAlignment="Center"
                                            FontSize="12"
                                            Margin="0,4,0,0" />
-								</VerticalStackLayout>
-							</DataTemplate>
-						</CollectionView.ItemTemplate>
-					</CollectionView>
-				</VerticalStackLayout>
-			</Border>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
 
-			<!-- Section 3: Adjustable S & L for each Swatch (Hue is Locked in VM) -->
-			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
-				<VerticalStackLayout Spacing="8">
-					<Label Text="Fine-tune Saturation + Lightness"
-						   FontAttributes="Bold" />
+            <!-- Section 3: Adjustable S & L for each Swatch (Hue is Locked in VM) -->
+            <Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Fine-tune Saturation + Lightness"
+						   FontAttributes="Bold"
+                           FontSize="17"
+                           TextDecorations="Underline" />
 
-					<CollectionView ItemsSource="{Binding Palette}">
-						<CollectionView.ItemTemplate>
-							<DataTemplate x:DataType="vm:ColorSlotViewModel">
-								<VerticalStackLayout Spacing="4" Margin="0,0,0,8">
-									<Label Text="{Binding Label}" />
-									<BoxView HeightRequest="24" Color="{Binding Color}" />
-									<Label Text="Saturation" FontSize="11" />
-									<Slider Minimum="0" Maximum="1"
+                    <Label>
+                        <Label.FormattedText>
+                            <FormattedString>
+                                <Span Text="Now that you have your generated palette, you are now given the option to tweak the " />
+                                <Span Text="Saturation and Lightness values"
+                                      FontAttributes="Bold" />
+                                <Span Text=" to your liking if the colors by default do not appeal to you or your artwork as much. &#10;" />
+                            </FormattedString>
+                        </Label.FormattedText>
+                    </Label>
+
+                    <CollectionView ItemsSource="{Binding Palette}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="vm:ColorSlotViewModel">
+                                <VerticalStackLayout Spacing="4" Margin="0,0,0,8">
+                                    <Label Text="{Binding Label}" 
+                                           FontAttributes="Bold"
+                                           TextDecorations="Underline"/>
+                                    <BoxView HeightRequest="24" Color="{Binding Color}" />
+                                    <Label Text="Saturation" FontSize="11" />
+                                    <Slider Minimum="0" Maximum="1"
 											ThumbColor="#323232"
 											MinimumTrackColor="#323232"
 											Value="{Binding Saturation}" />
-									<Label Text="Lightness" FontSize="11" />
-									<Slider Minimum="0" Maximum="1"
+                                    <Label Text="Lightness" FontSize="11" />
+                                    <Slider Minimum="0" Maximum="1"
 											ThumbColor="#323232"
 											MinimumTrackColor="#323232"
 											Value="{Binding Lightness}" />
-								</VerticalStackLayout>
-							</DataTemplate>
-						</CollectionView.ItemTemplate>
-					</CollectionView>
-				</VerticalStackLayout>
-			</Border>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
 
-			<!-- Section 4: Save + Export block -->
-			<Border Padding="12" StrokeThickness="1" Stroke="LightGray">
-				<VerticalStackLayout Spacing="8">
-					<Button Text="Save Palette" Command="{Binding SaveCommand}" />
-					<Editor Text="{Binding PaletteMessage}"
+            <!-- Section 4: Save + Export block -->
+            <Border Padding="12" StrokeThickness="1" Stroke="LightGray">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="After tweaking the colors to your liking, you can save your current palette and use it for the other sections, if you so wish." />
+
+                    <Button Text="Save Palette" Command="{Binding SaveCommand}" />
+                    <Editor Text="{Binding PaletteMessage}"
 							AutoSize="TextChanges"
 							IsReadOnly="True"
 							HeightRequest="50" />
-				</VerticalStackLayout>
-			</Border>
+                </VerticalStackLayout>
+            </Border>
 
-		</VerticalStackLayout>
-	</ScrollView>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
